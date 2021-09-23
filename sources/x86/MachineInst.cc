@@ -18,11 +18,19 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
         if (inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Reg) {
             auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
             auto rhs = static_cast<std::uint8_t>(inst.operands[1].reg);
-            encoded[length++] = 0x48; // REX.W
-            encoded[length++] = 0x01; // ADD r/m64, r64
+            std::uint8_t rex = 0x48; // REX.W
+            if (lhs >= 8) {
+                rex |= (1u << 0u); // REX.B
+            }
+            if (rhs >= 8) {
+                rex |= (1u << 2u); // REX.R
+            }
+            encoded[length++] = rex;
+            encoded[length++] = 0x01; // add r/m64, r64
             encoded[length++] = emit_mod_rm(0b11, rhs, lhs);
             break;
         }
+        // TODO: Emit special encoding for add (al, ax, eax, rax), imm
         ASSERT(inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Imm);
         auto dst = static_cast<std::uint8_t>(inst.operands[0].reg);
         auto imm = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
@@ -40,7 +48,7 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
     case Opcode::Call: {
         ASSERT(inst.operands[0].type == OperandType::Off);
         auto off = (static_cast<std::uint64_t>(inst.operands[0].off) & 0xffffffffu) - 5;
-        encoded[length++] = 0xe8;
+        encoded[length++] = 0xe8; // call off32
         encoded[length++] = (off >> 0u) & 0xffu;
         encoded[length++] = (off >> 8u) & 0xffu;
         encoded[length++] = (off >> 16u) & 0xffu;
@@ -52,7 +60,11 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
         auto dst = static_cast<std::uint8_t>(inst.operands[0].reg);
         auto imm = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
         ASSERT(imm <= 0x7f);
-        encoded[length++] = 0x48; // REX.W
+        if (dst >= 8) {
+            encoded[length++] = 0x49; // REX.W + REX.B
+        } else {
+            encoded[length++] = 0x48; // REX.W
+        }
         encoded[length++] = 0x83; // cmp r/m64, imm8
         encoded[length++] = emit_mod_rm(0b11, 7, dst);
         encoded[length++] = imm;
@@ -74,6 +86,10 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
         if (inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Imm) {
             auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
             auto rhs = static_cast<std::uint32_t>(inst.operands[1].imm & 0xffffffffu);
+            if (lhs >= 8) {
+                encoded[length++] = 0x41; // REX.B
+                lhs -= 8;
+            }
             encoded[length++] = 0xb8 + lhs;
             encoded[length++] = (rhs >> 0u) & 0xffu;
             encoded[length++] = (rhs >> 8u) & 0xffu;
@@ -84,7 +100,14 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
         ASSERT(inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Reg);
         auto dst = static_cast<std::uint8_t>(inst.operands[0].reg);
         auto src = static_cast<std::uint8_t>(inst.operands[1].reg);
-        encoded[length++] = 0x48; // REX.W
+        std::uint8_t rex = 0x48; // REX.W
+        if (dst >= 8) {
+            rex |= (1u << 0u); // REX.B
+        }
+        if (src >= 8) {
+            rex |= (1u << 2u); // REX.R
+        }
+        encoded[length++] = rex;
         encoded[length++] = 0x89; // mov r/m64, r64
         encoded[length++] = emit_mod_rm(0b11, src, dst);
         break;
