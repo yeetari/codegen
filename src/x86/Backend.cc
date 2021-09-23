@@ -99,6 +99,11 @@ std::vector<std::uint8_t> encode(const std::vector<MachineInst> &insts) {
         case Opcode::Lbl:
             label_map.emplace(inst.operands[0].lbl, length);
             continue;
+        case Opcode::CallLbl:
+            inst.opcode = Opcode::Call;
+            inst.operands[0].type = OperandType::Off;
+            inst.operands[0].off = 0;
+            break;
         case Opcode::JeLbl:
         case Opcode::JmpLbl:
             inst.opcode = Opcode::Jmp;
@@ -117,6 +122,11 @@ std::vector<std::uint8_t> encode(const std::vector<MachineInst> &insts) {
         switch (inst.opcode) {
         case Opcode::Lbl:
             continue;
+        case Opcode::CallLbl:
+            inst.opcode = Opcode::Call;
+            inst.operands[0].type = OperandType::Off;
+            inst.operands[0].off = label_map.at(inst.operands[0].lbl) - ret.size();
+            break;
         case Opcode::JeLbl:
             inst.opcode = Opcode::Je;
             inst.operands[0].type = OperandType::Off;

@@ -37,6 +37,16 @@ std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded
         encoded[length++] = imm;
         break;
     }
+    case Opcode::Call: {
+        ASSERT(inst.operands[0].type == OperandType::Off);
+        auto off = (static_cast<std::uint64_t>(inst.operands[0].off) & 0xffffffffu) - 5;
+        encoded[length++] = 0xe8;
+        encoded[length++] = (off >> 0u) & 0xffu;
+        encoded[length++] = (off >> 8u) & 0xffu;
+        encoded[length++] = (off >> 16u) & 0xffu;
+        encoded[length++] = (off >> 24u) & 0xffu;
+        break;
+    }
     case Opcode::Cmp: {
         ASSERT(inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Imm);
         auto dst = static_cast<std::uint8_t>(inst.operands[0].reg);

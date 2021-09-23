@@ -16,10 +16,12 @@ enum class Opcode {
     Push,
     Ret,
 
+    Call,
     Je,
     Jmp,
 
     Lbl,
+    CallLbl,
     JeLbl,
     JmpLbl,
 };
