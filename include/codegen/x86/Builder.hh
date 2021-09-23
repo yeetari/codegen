@@ -18,6 +18,7 @@ public:
     Builder base_disp(Register base, std::int32_t disp);
     Builder imm(std::uint64_t op);
     Builder lbl(const void *op);
+    Builder off(std::int64_t op);
     Builder reg(Register op);
 };
 

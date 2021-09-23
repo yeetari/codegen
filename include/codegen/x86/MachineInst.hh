@@ -39,7 +39,7 @@ struct Operand {
     union {
         std::uint64_t imm;
         const void *lbl;
-        std::int8_t off;
+        std::int64_t off;
         Register reg;
     };
 };
