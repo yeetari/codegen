@@ -9,6 +9,7 @@ class InstVisitor;
 enum class Opcode {
     Add,
     Branch,
+    Call,
     CondBranch,
     Copy,
     Ret,

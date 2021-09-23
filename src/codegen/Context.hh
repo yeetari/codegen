@@ -8,24 +8,24 @@
 
 namespace ir {
 
-class Function;
+class Unit;
 
 } // namespace ir
 
 namespace codegen {
 
 class Context {
-    ir::Function *const m_function;
+    ir::Unit *const m_unit;
     std::vector<std::unique_ptr<Register>> m_registers;
     std::size_t m_virtual_count{0};
 
 public:
-    explicit Context(ir::Function &function) : m_function(&function) {}
+    explicit Context(ir::Unit &unit) : m_unit(&unit) {}
 
     Register *create_physical(std::size_t phys) { return m_registers.emplace_back(new Register(phys, true)).get(); }
     Register *create_virtual() { return m_registers.emplace_back(new Register(m_virtual_count++, false)).get(); }
 
-    ir::Function *function() const { return m_function; }
+    ir::Unit &unit() const { return *m_unit; }
 };
 
 } // namespace codegen

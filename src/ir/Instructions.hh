@@ -3,6 +3,8 @@
 #include <codegen/Register.hh>
 #include <ir/Instruction.hh>
 
+#include <vector>
+
 namespace ir {
 
 class BasicBlock;
@@ -43,6 +45,26 @@ public:
     void accept(InstVisitor *visitor) override;
 
     BasicBlock *dst() const { return m_dst; }
+};
+
+class CallInst final : public Instruction {
+    Value *m_callee;
+    std::vector<Value *> m_args;
+
+public:
+    CallInst(Value *callee, std::vector<Value *> &&args);
+    CallInst(const CallInst &) = delete;
+    CallInst(CallInst &&) = delete;
+    ~CallInst() override;
+
+    CallInst &operator=(const CallInst &) = delete;
+    CallInst &operator=(CallInst &&) = delete;
+
+    void accept(InstVisitor *visitor) override;
+    void replace_uses_of_with(Value *orig, Value *repl) override;
+
+    Value *callee() const { return m_callee; }
+    const std::vector<Value *> &args() const { return m_args; }
 };
 
 class CondBranchInst final : public Instruction {

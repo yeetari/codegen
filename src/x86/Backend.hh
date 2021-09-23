@@ -8,13 +8,13 @@
 
 namespace ir {
 
-class Function;
+class Unit;
 
 } // namespace ir
 
 namespace x86 {
 
-std::vector<MachineInst> compile(const ir::Function &function);
+std::vector<MachineInst> compile(const ir::Unit &unit);
 std::vector<std::uint8_t> encode(const std::vector<MachineInst> &insts);
 
 } // namespace x86

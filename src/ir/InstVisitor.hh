@@ -4,6 +4,7 @@ namespace ir {
 
 class AddInst;
 class BranchInst;
+class CallInst;
 class CondBranchInst;
 class CopyInst;
 class RetInst;
@@ -11,6 +12,7 @@ class RetInst;
 struct InstVisitor {
     virtual void visit(AddInst *) = 0;
     virtual void visit(BranchInst *) = 0;
+    virtual void visit(CallInst *) = 0;
     virtual void visit(CondBranchInst *) = 0;
     virtual void visit(CopyInst *) = 0;
     virtual void visit(RetInst *) = 0;

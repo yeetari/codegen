@@ -2,8 +2,8 @@
 
 namespace ir {
 
-class Function;
+class Unit;
 
-void dump(Function &function);
+void dump(Unit &unit);
 
 } // namespace ir

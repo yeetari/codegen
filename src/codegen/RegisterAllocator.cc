@@ -1,5 +1,6 @@
 #include <codegen/RegisterAllocator.hh>
 
+#include <codegen/Context.hh>
 #include <codegen/Liveness.hh>
 #include <codegen/Register.hh>
 #include <graph/DominanceComputer.hh>
@@ -8,6 +9,7 @@
 #include <ir/Function.hh>
 #include <ir/InstVisitor.hh>
 #include <ir/Instructions.hh>
+#include <ir/Unit.hh>
 #include <support/Assert.hh>
 #include <x86/Register.hh>
 
@@ -19,24 +21,26 @@ namespace codegen {
 namespace {
 
 class RegisterAllocator final : public ir::InstVisitor {
+    Context &m_context;
     const ir::Instruction *m_inst{nullptr};
     std::unique_ptr<Liveness> m_liveness;
-    std::unordered_map<std::size_t, Register *> m_matrix;
+    std::unordered_map<std::size_t, ir::Value *> m_matrix;
     std::vector<std::size_t> m_phys_regs;
 
 public:
-    RegisterAllocator();
+    explicit RegisterAllocator(Context &context);
 
     void allocate(Register *virt);
-    void run(ir::Function &function);
+    void run(ir::Function *function);
     void visit(ir::AddInst *) override;
     void visit(ir::BranchInst *) override;
+    void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::RetInst *) override;
 };
 
-RegisterAllocator::RegisterAllocator() {
+RegisterAllocator::RegisterAllocator(Context &context) : m_context(context) {
     m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rsi));
     m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rdi));
     m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rax));
@@ -70,9 +74,9 @@ void RegisterAllocator::allocate(Register *virt) {
     ENSURE_NOT_REACHED("Ran out of registers");
 }
 
-void RegisterAllocator::run(ir::Function &function) {
-    Graph<ir::BasicBlock> cfg(*function.begin());
-    for (auto *block : function) {
+void RegisterAllocator::run(ir::Function *function) {
+    Graph<ir::BasicBlock> cfg(*function->begin());
+    for (auto *block : *function) {
         for (auto *inst : *block) {
             if (auto *branch = inst->as<ir::BranchInst>()) {
                 cfg.connect(block, branch->dst());
@@ -82,7 +86,15 @@ void RegisterAllocator::run(ir::Function &function) {
             }
         }
     }
-    m_liveness = std::make_unique<Liveness>(function, cfg);
+    m_liveness = std::make_unique<Liveness>(*function, cfg);
+
+    // TODO: Assuming target/ABI registers.
+    std::array argument_registers{7, 6, 2, 1, 8, 9};
+    for (std::size_t i = 0; i < function->arguments().size(); i++) {
+        auto *argument = function->argument(i);
+        argument->replace_all_uses_with(m_context.create_physical(argument_registers[i]));
+        m_matrix[argument_registers[i]] = argument;
+    }
 
     auto dom_tree = cfg.run<DominanceComputer>();
     auto dom_dfs = dom_tree.run<DepthFirstSearch>();
@@ -106,6 +118,8 @@ void RegisterAllocator::visit(ir::AddInst *add) {
 
 void RegisterAllocator::visit(ir::BranchInst *) {}
 
+void RegisterAllocator::visit(ir::CallInst *) {}
+
 void RegisterAllocator::visit(ir::CondBranchInst *cond_branch) {
     if (auto *reg = cond_branch->cond()->as<Register>()) {
         allocate(reg);
@@ -124,9 +138,11 @@ void RegisterAllocator::visit(ir::RetInst *ret) {
 
 } // namespace
 
-void register_allocate(ir::Function &function) {
-    RegisterAllocator allocator;
-    allocator.run(function);
+void register_allocate(Context &context) {
+    for (auto *function : context.unit()) {
+        RegisterAllocator allocator(context);
+        allocator.run(function);
+    }
 }
 
 } // namespace codegen

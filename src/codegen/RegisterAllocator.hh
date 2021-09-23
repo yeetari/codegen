@@ -1,13 +1,9 @@
 #pragma once
 
-namespace ir {
-
-class Function;
-
-} // namespace ir
-
 namespace codegen {
 
-void register_allocate(ir::Function &function);
+class Context;
+
+void register_allocate(Context &context);
 
 } // namespace codegen

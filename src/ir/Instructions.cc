@@ -60,6 +60,46 @@ void BranchInst::accept(InstVisitor *visitor) {
     visitor->visit(this);
 }
 
+CallInst::CallInst(Value *callee, std::vector<Value *> &&args)
+    : Instruction(Opcode::Call), m_callee(callee), m_args(std::move(args)) {
+    callee->add_user(this);
+    for (auto *arg : m_args) {
+        arg->add_user(this);
+    }
+}
+
+CallInst::~CallInst() {
+    if (m_callee != nullptr) {
+        m_callee->remove_user(this);
+    }
+    for (auto *arg : m_args) {
+        if (arg != nullptr) {
+            arg->remove_user(this);
+        }
+    }
+}
+
+void CallInst::accept(InstVisitor *visitor) {
+    visitor->visit(this);
+}
+
+void CallInst::replace_uses_of_with(Value *orig, Value *repl) {
+    if (m_callee == orig) {
+        m_callee->remove_user(this);
+        m_callee = repl;
+        if (m_callee != nullptr) {
+            m_callee->add_user(this);
+        }
+    }
+    for (auto *&arg : m_args) {
+        arg->remove_user(this);
+        arg = repl;
+        if (arg != nullptr) {
+            arg->add_user(this);
+        }
+    }
+}
+
 CondBranchInst::CondBranchInst(Value *cond, BasicBlock *true_dst, BasicBlock *false_dst)
     : Instruction(Opcode::CondBranch), m_cond(cond), m_true_dst(true_dst), m_false_dst(false_dst) {
     cond->add_user(this);

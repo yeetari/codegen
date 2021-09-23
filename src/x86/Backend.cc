@@ -6,6 +6,7 @@
 #include <ir/Function.hh>
 #include <ir/InstVisitor.hh>
 #include <ir/Instructions.hh>
+#include <ir/Unit.hh>
 #include <support/Assert.hh>
 #include <x86/Builder.hh>
 #include <x86/Register.hh>
@@ -22,9 +23,10 @@ class Compiler final : public ir::InstVisitor {
     Builder emit(Opcode opcode);
 
 public:
-    void run(const ir::Function &function);
+    void run(const ir::Function *function);
     void visit(ir::AddInst *) override;
     void visit(ir::BranchInst *) override;
+    void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::RetInst *) override;
@@ -38,8 +40,9 @@ Builder Compiler::emit(Opcode opcode) {
     return Builder(&inst);
 }
 
-void Compiler::run(const ir::Function &function) {
-    for (auto *block : function) {
+void Compiler::run(const ir::Function *function) {
+    emit(Opcode::Lbl).lbl(function);
+    for (auto *block : *function) {
         emit(Opcode::Lbl).lbl(block);
         for (auto *inst : *block) {
             inst->accept(this);
@@ -60,6 +63,10 @@ void Compiler::visit(ir::AddInst *add) {
 
 void Compiler::visit(ir::BranchInst *) {
     ENSURE_NOT_REACHED();
+}
+
+void Compiler::visit(ir::CallInst *call) {
+    emit(Opcode::CallLbl).lbl(call->callee());
 }
 
 void Compiler::visit(ir::CondBranchInst *cond_branch) {
@@ -86,9 +93,11 @@ void Compiler::visit(ir::RetInst *) {
 
 } // namespace
 
-std::vector<MachineInst> compile(const ir::Function &function) {
+std::vector<MachineInst> compile(const ir::Unit &unit) {
     Compiler compiler;
-    compiler.run(function);
+    for (const auto *function : unit) {
+        compiler.run(function);
+    }
     return std::move(compiler.insts());
 }
 

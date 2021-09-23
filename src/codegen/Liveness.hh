@@ -32,6 +32,7 @@ public:
     bool live_at(const ir::Value *value, const ir::Instruction *point);
     void visit(ir::AddInst *) override;
     void visit(ir::BranchInst *) override;
+    void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::RetInst *) override;

@@ -9,6 +9,10 @@
 namespace codegen {
 
 Liveness::Liveness(ir::Function &function, const Graph<ir::BasicBlock> &cfg) : m_cfg(&cfg) {
+    for (const auto &argument : function.arguments()) {
+        ASSERT(!m_def_map.contains(&argument));
+        m_def_map.emplace(&argument, cfg.entry());
+    }
     for (auto *block : function) {
         m_block = block;
         for (auto *inst : *block) {
@@ -27,6 +31,11 @@ void Liveness::visit_use(const ir::Value *value) {
     if (value->kind() == ir::ValueKind::Constant) {
         return;
     }
+    if (const auto *reg = value->as<Register>()) {
+        if (reg->physical()) {
+            return;
+        }
+    }
     auto *def_block = m_def_map.at(value);
     std::vector<ir::BasicBlock *> work_queue;
     work_queue.push_back(m_block);
@@ -42,11 +51,14 @@ void Liveness::visit_use(const ir::Value *value) {
             end = block->iterator(m_inst);
             ++end;
         }
-        for (auto it = end; it != begin; --it) {
+        for (auto it = end;; --it) {
             if (it == block->end()) {
                 continue;
             }
             m_live_map[*it][value] = true;
+            if (it == begin) {
+                break;
+            }
         }
         if (block == def_block) {
             break;
@@ -68,6 +80,13 @@ void Liveness::visit(ir::AddInst *add) {
 }
 
 void Liveness::visit(ir::BranchInst *) {}
+
+void Liveness::visit(ir::CallInst *call) {
+    visit_def(call);
+    for (auto *arg : call->args()) {
+        visit_use(arg);
+    }
+}
 
 void Liveness::visit(ir::CondBranchInst *cond_branch) {
     visit_use(cond_branch->cond());

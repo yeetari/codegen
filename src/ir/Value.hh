@@ -7,8 +7,10 @@
 namespace ir {
 
 enum class ValueKind {
+    Argument,
     BasicBlock,
     Constant,
+    Function,
     Instruction,
     Register,
 };

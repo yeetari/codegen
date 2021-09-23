@@ -8,6 +8,7 @@ target_sources(codegen PRIVATE
     ir/Dumper.cc
     ir/Function.cc
     ir/Instructions.cc
+    ir/Unit.cc
     ir/Value.cc
     support/Assert.cc
     x86/Backend.cc
