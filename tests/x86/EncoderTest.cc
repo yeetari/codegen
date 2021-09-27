@@ -92,6 +92,13 @@ TEST(x86EncoderTest, Cmp64Reg64Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
+TEST(x86EncoderTest, Leave64) {
+    BUILD_NO_OPERANDS(Opcode::Leave);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 1);
+    EXPECT_EQ(encoded[0], 0xc9); // leave
+}
+
 TEST(x86EncoderTest, Mov32Reg32Imm32) {
     BUILD(Opcode::Mov).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
@@ -168,6 +175,44 @@ TEST(x86EncoderTest, Ret) {
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 1);
     EXPECT_EQ(encoded[0], 0xc3); // ret
+}
+
+TEST(x86EncoderTest, Sub64Reg32Imm8) {
+    BUILD(Opcode::Sub).reg(Register::rbx).imm(0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x48); // REX.W
+    EXPECT_EQ(encoded[1], 0x83); // sub r/m64, imm8
+    EXPECT_EQ(encoded[2], 0xeb); // modrm(0b11, /5, rbx=3)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Sub64Reg64Imm8) {
+    BUILD(Opcode::Sub).reg(Register::r11).imm(0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x49); // REX.W + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x83); // sub r/m64, imm8
+    EXPECT_EQ(encoded[2], 0xeb); // modrm(0b11, /5, r11=3)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Sub64Reg32Reg32) {
+    BUILD(Opcode::Sub).reg(Register::rax).reg(Register::rbx);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 3);
+    EXPECT_EQ(encoded[0], 0x48); // REX.W
+    EXPECT_EQ(encoded[1], 0x29); // sub r/m64, r64
+    EXPECT_EQ(encoded[2], 0xd8); // modrm(0b11, rbx=3, rax=0)
+}
+
+TEST(x86EncoderTest, Sub64Reg64Reg64) {
+    BUILD(Opcode::Sub).reg(Register::r11).reg(Register::r12);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 3);
+    EXPECT_EQ(encoded[0], 0x4d); // REX.W + REX.R(r12) + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x29); // sub r/m64, r64
+    EXPECT_EQ(encoded[2], 0xe3); // modrm(0b11, r12=4, r11=3)
 }
 
 } // namespace

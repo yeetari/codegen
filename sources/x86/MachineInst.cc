@@ -11,7 +11,7 @@ std::uint8_t emit_mod_rm(std::uint8_t mod, std::uint8_t reg, std::uint8_t rm) {
     return ((mod & 0b11u) << 6u) | ((reg & 0b111u) << 3u) | (rm & 0b111u);
 }
 
-std::uint8_t encode_add(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+std::uint8_t encode_arith(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
     ASSERT(inst.operands[0].type == OperandType::Reg);
     auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
     std::uint8_t rex = 0x48; // REX.W
@@ -20,12 +20,12 @@ std::uint8_t encode_add(const MachineInst &inst, std::span<std::uint8_t, 16> enc
     }
     switch (inst.operands[1].type) {
     case OperandType::Imm: {
-        // TODO: Emit special encoding for add (al, ax, eax, rax), imm(8, 16, 32, 32).
+        // TODO: Emit special encoding for add/sub (al, ax, eax, rax), imm(8, 16, 32, 32).
         auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
         ASSERT(rhs <= 0x7f);
         encoded[0] = rex;
-        encoded[1] = 0x83; // add r/m, imm8
-        encoded[2] = emit_mod_rm(0b11, 0, lhs);
+        encoded[1] = 0x83; // add/sub r/m, imm8
+        encoded[2] = emit_mod_rm(0b11, inst.opcode == Opcode::Sub ? 5 : 0, lhs);
         encoded[3] = rhs;
         return 4;
     }
@@ -35,7 +35,11 @@ std::uint8_t encode_add(const MachineInst &inst, std::span<std::uint8_t, 16> enc
             rex |= (1u << 2u); // REX.R
         }
         encoded[0] = rex;
-        encoded[1] = 0x01; // add r/m, reg
+        if (inst.opcode == Opcode::Add) {
+            encoded[1] = 0x01; // add r/m, reg
+        } else {
+            encoded[1] = 0x29; // sub r/m, reg
+        }
         encoded[2] = emit_mod_rm(0b11, rhs, lhs);
         return 3;
     }
@@ -59,6 +63,11 @@ std::uint8_t encode_cmp(const MachineInst &inst, std::span<std::uint8_t, 16> enc
     encoded[2] = emit_mod_rm(0b11, 7, lhs);
     encoded[3] = rhs;
     return 4;
+}
+
+std::uint8_t encode_leave(const MachineInst &, std::span<std::uint8_t, 16> encoded) {
+    encoded[0] = 0xc9;
+    return 1;
 }
 
 std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
@@ -156,12 +165,14 @@ std::uint8_t encode_jmp(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 }
 
 const std::array s_functions{
-    &encode_add,
+    &encode_arith,
     &encode_cmp,
+    &encode_leave,
     &encode_mov,
     &encode_pop,
     &encode_push,
     &encode_ret,
+    &encode_arith,
     &encode_call,
     &encode_je,
     &encode_jmp,

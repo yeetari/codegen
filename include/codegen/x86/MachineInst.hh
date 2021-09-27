@@ -11,10 +11,12 @@ namespace x86 {
 enum class Opcode {
     Add,
     Cmp,
+    Leave,
     Mov,
     Pop,
     Push,
     Ret,
+    Sub,
 
     Call,
     Je,
