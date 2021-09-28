@@ -43,6 +43,7 @@ public:
     BranchInst &operator=(BranchInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    void replace_uses_of_with(Value *orig, Value *repl) override;
 
     BasicBlock *dst() const { return m_dst; }
 };

@@ -53,11 +53,23 @@ BranchInst::BranchInst(BasicBlock *dst) : Instruction(Opcode::Branch), m_dst(dst
 }
 
 BranchInst::~BranchInst() {
-    m_dst->remove_user(this);
+    if (m_dst != nullptr) {
+        m_dst->remove_user(this);
+    }
 }
 
 void BranchInst::accept(InstVisitor *visitor) {
     visitor->visit(this);
+}
+
+void BranchInst::replace_uses_of_with(Value *orig, Value *repl) {
+    if (m_dst == orig) {
+        m_dst->remove_user(this);
+        m_dst = static_cast<BasicBlock *>(repl);
+        if (m_dst != nullptr) {
+            m_dst->add_user(this);
+        }
+    }
 }
 
 CallInst::CallInst(Value *callee, std::vector<Value *> &&args)
