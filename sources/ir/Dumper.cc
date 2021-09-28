@@ -19,6 +19,7 @@ namespace {
 class Dumper final : public InstVisitor {
     const Function *const m_function;
     std::unordered_map<BasicBlock *, std::size_t> m_block_map;
+    std::unordered_map<StackSlot *, std::size_t> m_stack_map;
     std::unordered_map<Value *, std::size_t> m_value_map;
 
     std::string value_string(Value *value);
@@ -27,12 +28,15 @@ public:
     explicit Dumper(const Function *function) : m_function(function) {}
 
     void dump(BasicBlock &block);
+    void dump_stack_slots();
     void visit(AddInst *) override;
     void visit(BranchInst *) override;
     void visit(CallInst *) override;
     void visit(CondBranchInst *) override;
     void visit(CopyInst *) override;
+    void visit(LoadInst *) override;
     void visit(RetInst *) override;
+    void visit(StoreInst *) override;
 };
 
 std::string Dumper::value_string(Value *value) {
@@ -59,6 +63,12 @@ std::string Dumper::value_string(Value *value) {
     if (auto *reg = value->as<codegen::Register>()) {
         return fmt::format("{}({})", reg->physical() ? "phys" : "virt", reg->reg());
     }
+    if (auto *stack_slot = value->as<StackSlot>()) {
+        if (!m_stack_map.contains(stack_slot)) {
+            m_stack_map.emplace(stack_slot, m_stack_map.size());
+        }
+        return fmt::format("%s{}", m_stack_map.at(stack_slot));
+    }
     if (!m_value_map.contains(value)) {
         m_value_map.emplace(value, m_value_map.size());
     }
@@ -70,13 +80,20 @@ void Dumper::dump(BasicBlock &block) {
     for (auto *inst : block) {
         fmt::print("    ");
         // TODO: inst->is_terminator()
-        if (!inst->is<BranchInst>() && !inst->is<CondBranchInst>() && !inst->is<CopyInst>() && !inst->is<RetInst>()) {
+        if (!inst->is<BranchInst>() && !inst->is<CondBranchInst>() && !inst->is<CopyInst>() && !inst->is<RetInst>() &&
+            !inst->is<StoreInst>()) {
             fmt::print("{} = ", value_string(inst));
         }
         inst->accept(this);
         fmt::print("\n");
     }
     fmt::print("  }}\n");
+}
+
+void Dumper::dump_stack_slots() {
+    for (const auto &stack_slot : m_function->stack_slots()) {
+        fmt::print("  {}: i32\n", value_string(stack_slot.get()));
+    }
 }
 
 void Dumper::visit(AddInst *add) {
@@ -108,8 +125,16 @@ void Dumper::visit(CopyInst *copy) {
     fmt::print("copy {}, {}", value_string(copy->dst()), value_string(copy->src()));
 }
 
+void Dumper::visit(LoadInst *load) {
+    fmt::print("load {}", value_string(load->ptr()));
+}
+
 void Dumper::visit(RetInst *ret) {
     fmt::print("ret {}", value_string(ret->value()));
+}
+
+void Dumper::visit(StoreInst *store) {
+    fmt::print("store {}, {}", value_string(store->ptr()), value_string(store->value()));
 }
 
 } // namespace
@@ -125,6 +150,7 @@ void dump(Unit &unit) {
             fmt::print("%a{}", i);
         }
         fmt::print(") {{\n");
+        dumper.dump_stack_slots();
         for (auto *block : *function) {
             dumper.dump(*block);
         }

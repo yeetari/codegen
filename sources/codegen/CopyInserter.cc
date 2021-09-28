@@ -24,7 +24,9 @@ public:
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
+    void visit(ir::LoadInst *) override;
     void visit(ir::RetInst *) override;
+    void visit(ir::StoreInst *) override;
 };
 
 void CopyInserter::run(ir::Function *function) {
@@ -32,7 +34,11 @@ void CopyInserter::run(ir::Function *function) {
         m_block = block;
         for (auto it = block->begin(); it != block->end(); ++it) {
             auto *call = (*it)->as<ir::CallInst>();
+            bool no_copies_generated = (*it)->is<ir::BranchInst>() || (*it)->is<ir::LoadInst>();
             (*it)->accept(this);
+            if (no_copies_generated) {
+                continue;
+            }
             if (call != nullptr) {
                 for (std::size_t i = 0; i < call->args().size(); i++) {
                     ++it;
@@ -73,11 +79,19 @@ void CopyInserter::visit(ir::CopyInst *) {
     ENSURE_NOT_REACHED();
 }
 
+void CopyInserter::visit(ir::LoadInst *) {}
+
 void CopyInserter::visit(ir::RetInst *ret) {
     // TODO: Assuming target register 0 is return register.
     auto *copy = m_context.create_physical(0);
     m_block->insert<ir::CopyInst>(ret, copy, ret->value());
     ret->set_value(copy);
+}
+
+void CopyInserter::visit(ir::StoreInst *store) {
+    auto *copy = m_context.create_virtual();
+    m_block->insert<ir::CopyInst>(store, copy, store->value());
+    store->set_value(copy);
 }
 
 } // namespace

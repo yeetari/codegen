@@ -18,9 +18,12 @@ namespace x86 {
 namespace {
 
 class Compiler final : public ir::InstVisitor {
+    const ir::Function *m_function{nullptr};
+    std::unordered_map<const ir::StackSlot *, std::int32_t> m_stack_offsets;
     std::vector<MachineInst> m_insts;
 
     Builder emit(Opcode opcode);
+    void emit_rhs(Builder inst, ir::Value *rhs);
 
 public:
     void run(const ir::Function *function);
@@ -29,7 +32,9 @@ public:
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
+    void visit(ir::LoadInst *) override;
     void visit(ir::RetInst *) override;
+    void visit(ir::StoreInst *) override;
 
     std::vector<MachineInst> &insts() { return m_insts; }
 };
@@ -40,8 +45,29 @@ Builder Compiler::emit(Opcode opcode) {
     return Builder(&inst);
 }
 
+void Compiler::emit_rhs(Builder inst, ir::Value *rhs) {
+    if (auto *reg = rhs->as<codegen::Register>()) {
+        inst.reg(static_cast<Register>(reg->reg()));
+    } else if (auto *constant = rhs->as<ir::Constant>()) {
+        inst.imm(constant->value());
+    } else if (auto *load = rhs->as<ir::LoadInst>()) {
+        const auto *stack_slot = load->ptr()->as_non_null<ir::StackSlot>();
+        inst.base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
+    }
+}
+
 void Compiler::run(const ir::Function *function) {
+    m_function = function;
     emit(Opcode::Lbl).lbl(function);
+    if (!function->stack_slots().empty()) {
+        for (std::int32_t offset = 0; const auto &stack_slot : function->stack_slots()) {
+            offset -= 8;
+            m_stack_offsets.emplace(stack_slot.get(), offset);
+        }
+        emit(Opcode::Push).reg(Register::rbp);
+        emit(Opcode::Mov).reg(Register::rbp).reg(Register::rsp);
+        emit(Opcode::Sub).reg(Register::rsp).imm(function->stack_slots().size() * 8);
+    }
     for (auto *block : *function) {
         emit(Opcode::Lbl).lbl(block);
         for (auto *inst : *block) {
@@ -51,14 +77,10 @@ void Compiler::run(const ir::Function *function) {
 }
 
 void Compiler::visit(ir::AddInst *add) {
-    auto *lhs = add->lhs()->as_non_null<codegen::Register>();
+    const auto *lhs = add->lhs()->as_non_null<codegen::Register>();
     ASSERT(lhs->physical());
     auto inst = emit(Opcode::Add).reg(static_cast<Register>(lhs->reg()));
-    if (auto *reg = add->rhs()->as<codegen::Register>()) {
-        inst.reg(static_cast<Register>(reg->reg()));
-    } else if (auto *constant = add->rhs()->as<ir::Constant>()) {
-        inst.imm(constant->value());
-    }
+    emit_rhs(inst, add->rhs());
 }
 
 void Compiler::visit(ir::BranchInst *branch) {
@@ -70,7 +92,7 @@ void Compiler::visit(ir::CallInst *call) {
 }
 
 void Compiler::visit(ir::CondBranchInst *cond_branch) {
-    auto *cond = cond_branch->cond()->as_non_null<codegen::Register>();
+    const auto *cond = cond_branch->cond()->as_non_null<codegen::Register>();
     ASSERT(cond->physical());
     emit(Opcode::Cmp).reg(static_cast<Register>(cond->reg())).imm(1);
     emit(Opcode::JeLbl).lbl(cond_branch->true_dst());
@@ -80,15 +102,22 @@ void Compiler::visit(ir::CondBranchInst *cond_branch) {
 void Compiler::visit(ir::CopyInst *copy) {
     ASSERT(copy->dst()->physical());
     auto inst = emit(Opcode::Mov).reg(static_cast<Register>(copy->dst()->reg()));
-    if (auto *reg = copy->src()->as<codegen::Register>()) {
-        inst.reg(static_cast<Register>(reg->reg()));
-    } else if (auto *constant = copy->src()->as<ir::Constant>()) {
-        inst.imm(constant->value());
-    }
+    emit_rhs(inst, copy->src());
 }
 
+void Compiler::visit(ir::LoadInst *) {}
+
 void Compiler::visit(ir::RetInst *) {
+    if (!m_function->stack_slots().empty()) {
+        emit(Opcode::Leave);
+    }
     emit(Opcode::Ret);
+}
+
+void Compiler::visit(ir::StoreInst *store) {
+    const auto *stack_slot = store->ptr()->as_non_null<ir::StackSlot>();
+    auto inst = emit(Opcode::Mov).base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
+    emit_rhs(inst, store->value());
 }
 
 } // namespace

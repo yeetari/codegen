@@ -97,8 +97,14 @@ void Liveness::visit(ir::CopyInst *copy) {
     visit_use(copy->src());
 }
 
+void Liveness::visit(ir::LoadInst *load) {
+    visit_def(load);
+}
+
 void Liveness::visit(ir::RetInst *ret) {
     visit_use(ret->value());
 }
+
+void Liveness::visit(ir::StoreInst *) {}
 
 } // namespace codegen

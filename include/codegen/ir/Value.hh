@@ -13,6 +13,7 @@ enum class ValueKind {
     Function,
     Instruction,
     Register,
+    StackSlot,
 };
 
 // TODO: Constants and Registers shouldn't have a users vector; create a separate Usable class that

@@ -175,6 +175,30 @@ void CopyInst::replace_uses_of_with(Value *orig, Value *repl) {
     }
 }
 
+LoadInst::LoadInst(Value *ptr) : Instruction(Opcode::Load), m_ptr(ptr) {
+    ptr->add_user(this);
+}
+
+LoadInst::~LoadInst() {
+    if (m_ptr != nullptr) {
+        m_ptr->remove_user(this);
+    }
+}
+
+void LoadInst::accept(InstVisitor *visitor) {
+    visitor->visit(this);
+}
+
+void LoadInst::replace_uses_of_with(Value *orig, Value *repl) {
+    if (m_ptr == orig) {
+        m_ptr->remove_user(this);
+        m_ptr = repl;
+        if (m_ptr != nullptr) {
+            m_ptr->add_user(this);
+        }
+    }
+}
+
 RetInst::RetInst(Value *value) : Instruction(Opcode::Ret), m_value(value) {
     value->add_user(this);
 }
@@ -200,6 +224,48 @@ void RetInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void RetInst::set_value(Value *value) {
+    ASSERT(value != nullptr);
+    m_value->remove_user(this);
+    m_value = value;
+    m_value->add_user(this);
+}
+
+StoreInst::StoreInst(Value *ptr, Value *value) : Instruction(Opcode::Store), m_ptr(ptr), m_value(value) {
+    ptr->add_user(this);
+    value->add_user(this);
+}
+
+StoreInst::~StoreInst() {
+    if (m_ptr != nullptr) {
+        m_ptr->remove_user(this);
+    }
+    if (m_value != nullptr) {
+        m_value->remove_user(this);
+    }
+}
+
+void StoreInst::accept(InstVisitor *visitor) {
+    visitor->visit(this);
+}
+
+void StoreInst::replace_uses_of_with(Value *orig, Value *repl) {
+    if (m_ptr == orig) {
+        m_ptr->remove_user(this);
+        m_ptr = repl;
+        if (m_ptr != nullptr) {
+            m_ptr->add_user(this);
+        }
+    }
+    if (m_value == orig) {
+        m_value->remove_user(this);
+        m_value = repl;
+        if (m_value != nullptr) {
+            m_value->add_user(this);
+        }
+    }
+}
+
+void StoreInst::set_value(Value *value) {
     ASSERT(value != nullptr);
     m_value->remove_user(this);
     m_value = value;

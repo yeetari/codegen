@@ -35,7 +35,9 @@ public:
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
+    void visit(ir::LoadInst *) override;
     void visit(ir::RetInst *) override;
+    void visit(ir::StoreInst *) override;
 };
 
 } // namespace codegen

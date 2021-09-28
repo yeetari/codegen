@@ -111,6 +111,24 @@ public:
     Value *src() const { return m_src; }
 };
 
+class LoadInst final : public Instruction {
+    Value *m_ptr;
+
+public:
+    explicit LoadInst(Value *ptr);
+    LoadInst(const LoadInst &) = delete;
+    LoadInst(LoadInst &&) = delete;
+    ~LoadInst() override;
+
+    LoadInst &operator=(const LoadInst &) = delete;
+    LoadInst &operator=(LoadInst &&) = delete;
+
+    void accept(InstVisitor *visitor) override;
+    void replace_uses_of_with(Value *orig, Value *repl) override;
+
+    Value *ptr() const { return m_ptr; }
+};
+
 class RetInst final : public Instruction {
     Value *m_value;
 
@@ -127,6 +145,27 @@ public:
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_value(Value *value);
 
+    Value *value() const { return m_value; }
+};
+
+class StoreInst final : public Instruction {
+    Value *m_ptr;
+    Value *m_value;
+
+public:
+    StoreInst(Value *ptr, Value *value);
+    StoreInst(const StoreInst &) = delete;
+    StoreInst(StoreInst &&) = delete;
+    ~StoreInst() override;
+
+    StoreInst &operator=(const StoreInst &) = delete;
+    StoreInst &operator=(StoreInst &&) = delete;
+
+    void accept(InstVisitor *visitor) override;
+    void replace_uses_of_with(Value *orig, Value *repl) override;
+    void set_value(Value *value);
+
+    Value *ptr() const { return m_ptr; }
     Value *value() const { return m_value; }
 };
 

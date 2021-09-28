@@ -38,7 +38,9 @@ public:
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
+    void visit(ir::LoadInst *) override;
     void visit(ir::RetInst *) override;
+    void visit(ir::StoreInst *) override;
 };
 
 RegisterAllocator::RegisterAllocator(Context &context) : m_context(context) {
@@ -141,11 +143,15 @@ void RegisterAllocator::visit(ir::CopyInst *copy) {
     allocate(copy->dst());
 }
 
+void RegisterAllocator::visit(ir::LoadInst *) {}
+
 void RegisterAllocator::visit(ir::RetInst *ret) {
     if (auto *reg = ret->value()->as<Register>()) {
         allocate(reg);
     }
 }
+
+void RegisterAllocator::visit(ir::StoreInst *) {}
 
 } // namespace
 

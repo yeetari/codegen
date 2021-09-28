@@ -12,7 +12,9 @@ enum class Opcode {
     Call,
     CondBranch,
     Copy,
+    Load,
     Ret,
+    Store,
 };
 
 class Instruction : public Value {

@@ -2,6 +2,7 @@
 
 #include <codegen/ir/Argument.hh>
 #include <codegen/ir/BasicBlock.hh>
+#include <codegen/ir/StackSlot.hh>
 #include <codegen/ir/Value.hh>
 
 #include <memory>
@@ -16,6 +17,7 @@ class Function final : public Value {
     const std::string m_name;
     std::vector<Argument> m_arguments;
     std::vector<std::unique_ptr<BasicBlock>> m_blocks;
+    std::vector<std::unique_ptr<StackSlot>> m_stack_slots;
 
 public:
     Function(std::string &&name, std::size_t argument_count)
@@ -25,11 +27,13 @@ public:
     FunctionIterator end() const;
 
     BasicBlock *append_block();
+    StackSlot *append_stack_slot();
     Argument *argument(std::size_t index) { return &m_arguments[index]; }
     const Argument *argument(std::size_t index) const { return &m_arguments[index]; }
 
     const std::string &name() const { return m_name; }
     const std::vector<Argument> &arguments() const { return m_arguments; }
+    const std::vector<std::unique_ptr<StackSlot>> &stack_slots() const { return m_stack_slots; }
 };
 
 class FunctionIterator {
