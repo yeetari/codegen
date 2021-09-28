@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <sys/mman.h>
 
 int main() {
     ir::Unit unit;
@@ -61,4 +62,8 @@ int main() {
     auto encoded = x86::encode(compiled);
     std::ofstream output_file("foo.bin", std::ios::binary | std::ios::trunc);
     output_file.write(reinterpret_cast<const char *>(encoded.data()), static_cast<std::streamsize>(encoded.size()));
+    auto *code_region =
+        mmap(nullptr, encoded.size(), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    memcpy(code_region, encoded.data(), encoded.size());
+    return reinterpret_cast<int (*)()>(code_region)();
 }
