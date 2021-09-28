@@ -30,6 +30,7 @@ enum class Opcode {
 
 enum class OperandType {
     None,
+    BaseDisp,
     Imm,
     Lbl,
     Off,
@@ -39,6 +40,10 @@ enum class OperandType {
 struct Operand {
     OperandType type;
     union {
+        struct {
+            std::int32_t disp;
+            Register base;
+        };
         std::uint64_t imm;
         const void *lbl;
         std::int64_t off;

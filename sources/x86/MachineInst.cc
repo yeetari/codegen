@@ -3,6 +3,7 @@
 #include <codegen/support/Assert.hh>
 
 #include <array>
+#include <limits>
 
 namespace x86 {
 namespace {
@@ -71,19 +72,54 @@ std::uint8_t encode_leave(const MachineInst &, std::span<std::uint8_t, 16> encod
 }
 
 std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
-    ASSERT(inst.operands[0].type == OperandType::Reg);
-    auto dst = static_cast<std::uint8_t>(inst.operands[0].reg);
+    std::uint8_t mod = 0;
+    std::uint8_t dst = 0;
+    switch (inst.operands[0].type) {
+    case OperandType::BaseDisp: {
+        mod = 0b01;
+        dst = static_cast<std::uint8_t>(inst.operands[0].base);
+        break;
+    }
+    case OperandType::Reg: {
+        mod = 0b11;
+        dst = static_cast<std::uint8_t>(inst.operands[0].reg);
+        break;
+    }
+    default:
+        ENSURE_NOT_REACHED();
+    }
+
+    std::uint8_t length = 0;
     std::uint8_t rex = 0x40;
     if (dst >= 8) {
         rex |= (1u << 0u); // REX.B
     }
     switch (inst.operands[1].type) {
+    case OperandType::BaseDisp: {
+        // TODO: Use 32-bit displacement if needed.
+        ASSERT(inst.operands[1].disp > std::numeric_limits<std::int8_t>::min() &&
+               inst.operands[1].disp < std::numeric_limits<std::int8_t>::max());
+        bool need_sib = inst.operands[1].base == Register::rsp || inst.operands[1].base == Register::r12;
+        ASSERT(!need_sib); // TODO: Support rsp and r12.
+        if (rex != 0x40) {
+            rex = 0x40u | (1u << 2u);
+        }
+        auto base = static_cast<std::uint8_t>(inst.operands[1].base);
+        if (base >= 8) {
+            rex |= (1u << 0u); // REX.B
+        }
+        rex |= (1u << 3u); // REX.W
+        encoded[0] = rex;
+        encoded[1] = 0x8b; // mov reg, r/m
+        encoded[2] = emit_mod_rm(0b01, dst, base);
+        encoded[3] = inst.operands[1].disp;
+        return 4;
+    }
     case OperandType::Imm: {
         auto imm = static_cast<std::uint32_t>(inst.operands[1].imm & 0xffffffffu);
         if (dst >= 8) {
             dst -= 8;
         }
-        std::uint8_t length = 0;
         if (rex != 0x40) {
             encoded[length++] = rex;
         }
@@ -92,7 +128,7 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
         encoded[length++] = (imm >> 8u) & 0xffu;
         encoded[length++] = (imm >> 16u) & 0xffu;
         encoded[length++] = (imm >> 24u) & 0xffu;
-        return length;
+        break;
     }
     case OperandType::Reg: {
         auto src = static_cast<std::uint8_t>(inst.operands[1].reg);
@@ -100,14 +136,19 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
             rex |= (1u << 2u); // REX.R
         }
         rex |= (1u << 3u); // REX.W
-        encoded[0] = rex;
-        encoded[1] = 0x89; // mov r/m, reg
-        encoded[2] = emit_mod_rm(0b11, src, dst);
-        return 3;
+        encoded[length++] = rex;
+        encoded[length++] = 0x89; // mov r/m, reg
+        encoded[length++] = emit_mod_rm(mod, src, dst);
+        break;
     }
     default:
         ENSURE_NOT_REACHED();
     }
+
+    if (inst.operands[0].type == OperandType::BaseDisp) {
+        encoded[length++] = inst.operands[0].disp;
+    }
+    return length;
 }
 
 std::uint8_t encode_pop(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {

@@ -7,7 +7,10 @@
 
 namespace x86 {
 
-Builder Builder::base_disp(Register, std::int32_t) {
+Builder Builder::base_disp(Register base, std::int32_t disp) {
+    m_inst->operands[m_operand_count].type = OperandType::BaseDisp;
+    m_inst->operands[m_operand_count].base = base;
+    m_inst->operands[m_operand_count++].disp = disp;
     return *this;
 }
 
