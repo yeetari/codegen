@@ -83,8 +83,8 @@ void Dumper::visit(AddInst *add) {
     fmt::print("add {}, {}", value_string(add->lhs()), value_string(add->rhs()));
 }
 
-void Dumper::visit(BranchInst *) {
-    ENSURE_NOT_REACHED();
+void Dumper::visit(BranchInst *branch) {
+    fmt::print("br {}", value_string(branch->dst()));
 }
 
 void Dumper::visit(CallInst *call) {
