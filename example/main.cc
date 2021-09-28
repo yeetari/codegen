@@ -25,7 +25,12 @@ int main() {
     auto *callee = unit.append_function("foo", 2);
 
     auto *main_entry = main->append_block();
-    auto *call = main_entry->append<ir::CallInst>(callee, std::vector<ir::Value *>{ir::Constant::get(10), ir::Constant::get(20)});
+    auto *var1 = main->append_stack_slot();
+    auto *var2 = main->append_stack_slot();
+    main_entry->append<ir::StoreInst>(var1, ir::Constant::get(10));
+    main_entry->append<ir::StoreInst>(var2, main_entry->append<ir::LoadInst>(var1));
+    auto *call = main_entry->append<ir::CallInst>(
+        callee, std::vector<ir::Value *>{main_entry->append<ir::LoadInst>(var2), ir::Constant::get(20)});
     main_entry->append<ir::RetInst>(call);
 
     auto *callee_entry = callee->append_block();
