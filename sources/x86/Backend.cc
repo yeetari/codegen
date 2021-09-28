@@ -61,8 +61,8 @@ void Compiler::visit(ir::AddInst *add) {
     }
 }
 
-void Compiler::visit(ir::BranchInst *) {
-    ENSURE_NOT_REACHED();
+void Compiler::visit(ir::BranchInst *branch) {
+    emit(Opcode::JmpLbl).lbl(branch->dst());
 }
 
 void Compiler::visit(ir::CallInst *call) {

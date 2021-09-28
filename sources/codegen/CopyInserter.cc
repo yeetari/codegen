@@ -49,9 +49,7 @@ void CopyInserter::visit(ir::AddInst *add) {
     add->set_lhs(copy);
 }
 
-void CopyInserter::visit(ir::BranchInst *) {
-    ENSURE_NOT_REACHED();
-}
+void CopyInserter::visit(ir::BranchInst *) {}
 
 void CopyInserter::visit(ir::CallInst *call) {
     // TODO: Assuming target/ABI registers.
