@@ -79,8 +79,6 @@ void Liveness::visit(ir::AddInst *add) {
     visit_use(add->rhs());
 }
 
-void Liveness::visit(ir::BranchInst *) {}
-
 void Liveness::visit(ir::CallInst *call) {
     visit_def(call);
     for (auto *arg : call->args()) {
@@ -104,7 +102,5 @@ void Liveness::visit(ir::LoadInst *load) {
 void Liveness::visit(ir::RetInst *ret) {
     visit_use(ret->value());
 }
-
-void Liveness::visit(ir::StoreInst *) {}
 
 } // namespace codegen

@@ -20,11 +20,11 @@ public:
 
     void run(ir::Function *function);
     void visit(ir::AddInst *) override;
-    void visit(ir::BranchInst *) override;
+    void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
-    void visit(ir::CopyInst *) override;
-    void visit(ir::LoadInst *) override;
+    void visit(ir::CopyInst *) override {}
+    void visit(ir::LoadInst *) override {}
     void visit(ir::RetInst *) override;
     void visit(ir::StoreInst *) override;
 };
@@ -32,19 +32,8 @@ public:
 void CopyInserter::run(ir::Function *function) {
     for (auto *block : *function) {
         m_block = block;
-        for (auto it = block->begin(); it != block->end(); ++it) {
-            auto *call = (*it)->as<ir::CallInst>();
-            bool no_copies_generated = (*it)->is<ir::BranchInst>() || (*it)->is<ir::LoadInst>();
-            (*it)->accept(this);
-            if (no_copies_generated) {
-                continue;
-            }
-            if (call != nullptr) {
-                for (std::size_t i = 0; i < call->args().size(); i++) {
-                    ++it;
-                }
-            }
-            ++it;
+        for (auto *inst : *block) {
+            inst->accept(this);
         }
     }
 }
@@ -54,8 +43,6 @@ void CopyInserter::visit(ir::AddInst *add) {
     m_block->insert<ir::CopyInst>(add, copy, add->lhs());
     add->set_lhs(copy);
 }
-
-void CopyInserter::visit(ir::BranchInst *) {}
 
 void CopyInserter::visit(ir::CallInst *call) {
     // TODO: Assuming target/ABI registers.
@@ -74,12 +61,6 @@ void CopyInserter::visit(ir::CondBranchInst *cond_branch) {
     m_block->insert<ir::CopyInst>(cond_branch, copy, cond_branch->cond());
     cond_branch->set_cond(copy);
 }
-
-void CopyInserter::visit(ir::CopyInst *) {
-    ENSURE_NOT_REACHED();
-}
-
-void CopyInserter::visit(ir::LoadInst *) {}
 
 void CopyInserter::visit(ir::RetInst *ret) {
     // TODO: Assuming target register 0 is return register.

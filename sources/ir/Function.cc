@@ -3,11 +3,11 @@
 namespace ir {
 
 BasicBlock *Function::append_block() {
-    return m_blocks.emplace_back(new BasicBlock).get();
+    return m_blocks.emplace<BasicBlock>(m_blocks.end());
 }
 
 StackSlot *Function::append_stack_slot() {
-    return m_stack_slots.emplace_back(new StackSlot).get();
+    return m_stack_slots.emplace<StackSlot>(m_stack_slots.end());
 }
 
 } // namespace ir

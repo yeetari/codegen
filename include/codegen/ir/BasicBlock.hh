@@ -2,6 +2,8 @@
 
 #include <codegen/ir/Instructions.hh>
 #include <codegen/ir/Value.hh>
+#include <codegen/support/List.hh>
+#include <codegen/support/ListNode.hh>
 
 #include <concepts>
 #include <cstdint>
@@ -11,10 +13,8 @@
 
 namespace ir {
 
-class BasicBlockIterator;
-
-class BasicBlock final : public Value {
-    std::vector<std::unique_ptr<Instruction>> m_instructions;
+class BasicBlock final : public Value, public ListNode {
+    List<Instruction> m_instructions;
 
 public:
     BasicBlock() : Value(ValueKind::BasicBlock) {}
@@ -25,12 +25,12 @@ public:
     BasicBlock &operator=(const BasicBlock &) = delete;
     BasicBlock &operator=(BasicBlock &&) = delete;
 
-    BasicBlockIterator begin() const;
-    BasicBlockIterator end() const;
-    BasicBlockIterator iterator(Instruction *position) const;
+    auto begin() const { return m_instructions.begin(); }
+    auto end() const { return m_instructions.end(); }
+    auto iterator(Instruction *position) const;
 
     template <std::derived_from<Instruction> Inst, typename... Args>
-    Inst *insert(BasicBlockIterator position, Args &&...args);
+    Inst *insert(ListIterator<Instruction> position, Args &&...args);
 
     template <std::derived_from<Instruction> Inst, typename... Args>
     Inst *insert(Instruction *position, Args &&...args);
@@ -42,37 +42,7 @@ public:
     Inst *append(Args &&...args);
 };
 
-class BasicBlockIterator {
-    const std::vector<std::unique_ptr<Instruction>> *m_instructions;
-    std::size_t m_index;
-
-public:
-    BasicBlockIterator(const std::vector<std::unique_ptr<Instruction>> &instructions, std::size_t index)
-        : m_instructions(&instructions), m_index(index) {}
-
-    BasicBlockIterator &operator++() {
-        m_index++;
-        return *this;
-    }
-    BasicBlockIterator &operator--() {
-        m_index--;
-        return *this;
-    }
-
-    bool operator<=>(const BasicBlockIterator &) const = default;
-    Instruction *operator*() const { return (*m_instructions)[m_index].get(); }
-    std::size_t index() const { return m_index; }
-};
-
-inline BasicBlockIterator BasicBlock::begin() const {
-    return {m_instructions, 0};
-}
-
-inline BasicBlockIterator BasicBlock::end() const {
-    return {m_instructions, m_instructions.size()};
-}
-
-inline BasicBlockIterator BasicBlock::iterator(Instruction *position) const {
+inline auto BasicBlock::iterator(Instruction *position) const {
     std::size_t index = 0;
     for (auto *inst : *this) {
         if (inst == position) {
@@ -80,14 +50,12 @@ inline BasicBlockIterator BasicBlock::iterator(Instruction *position) const {
         }
         index++;
     }
-    return {m_instructions, index};
+    return ListIterator<Instruction>(position);
 }
 
 template <std::derived_from<Instruction> Inst, typename... Args>
-Inst *BasicBlock::insert(BasicBlockIterator position, Args &&...args) {
-    return static_cast<Inst *>(
-        m_instructions.emplace(m_instructions.begin() + position.index(), new Inst(std::forward<Args>(args)...))
-            ->get());
+Inst *BasicBlock::insert(ListIterator<Instruction> position, Args &&...args) {
+    return m_instructions.emplace<Inst>(position, std::forward<Args>(args)...);
 }
 
 template <std::derived_from<Instruction> Inst, typename... Args>

@@ -34,13 +34,13 @@ public:
     void allocate(Register *virt);
     void run(ir::Function *function);
     void visit(ir::AddInst *) override;
-    void visit(ir::BranchInst *) override;
-    void visit(ir::CallInst *) override;
+    void visit(ir::BranchInst *) override {}
+    void visit(ir::CallInst *) override {}
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
-    void visit(ir::LoadInst *) override;
+    void visit(ir::LoadInst *) override {}
     void visit(ir::RetInst *) override;
-    void visit(ir::StoreInst *) override;
+    void visit(ir::StoreInst *) override {}
 };
 
 RegisterAllocator::RegisterAllocator(Context &context) : m_context(context) {
@@ -129,10 +129,6 @@ void RegisterAllocator::visit(ir::AddInst *add) {
     add->replace_all_uses_with(add->lhs());
 }
 
-void RegisterAllocator::visit(ir::BranchInst *) {}
-
-void RegisterAllocator::visit(ir::CallInst *) {}
-
 void RegisterAllocator::visit(ir::CondBranchInst *cond_branch) {
     if (auto *reg = cond_branch->cond()->as<Register>()) {
         allocate(reg);
@@ -143,15 +139,11 @@ void RegisterAllocator::visit(ir::CopyInst *copy) {
     allocate(copy->dst());
 }
 
-void RegisterAllocator::visit(ir::LoadInst *) {}
-
 void RegisterAllocator::visit(ir::RetInst *ret) {
     if (auto *reg = ret->value()->as<Register>()) {
         allocate(reg);
     }
 }
-
-void RegisterAllocator::visit(ir::StoreInst *) {}
 
 } // namespace
 

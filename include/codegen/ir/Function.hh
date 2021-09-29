@@ -4,6 +4,8 @@
 #include <codegen/ir/BasicBlock.hh>
 #include <codegen/ir/StackSlot.hh>
 #include <codegen/ir/Value.hh>
+#include <codegen/support/List.hh>
+#include <codegen/support/ListNode.hh>
 
 #include <memory>
 #include <string>
@@ -11,20 +13,18 @@
 
 namespace ir {
 
-class FunctionIterator;
-
-class Function final : public Value {
+class Function final : public Value, public ListNode {
     const std::string m_name;
     std::vector<Argument> m_arguments;
-    std::vector<std::unique_ptr<BasicBlock>> m_blocks;
-    std::vector<std::unique_ptr<StackSlot>> m_stack_slots;
+    List<BasicBlock> m_blocks;
+    List<StackSlot> m_stack_slots;
 
 public:
     Function(std::string &&name, std::size_t argument_count)
         : Value(ValueKind::Function), m_name(std::move(name)), m_arguments(argument_count) {}
 
-    FunctionIterator begin() const;
-    FunctionIterator end() const;
+    auto begin() const { return m_blocks.begin(); }
+    auto end() const { return m_blocks.end(); }
 
     BasicBlock *append_block();
     StackSlot *append_stack_slot();
@@ -33,37 +33,7 @@ public:
 
     const std::string &name() const { return m_name; }
     const std::vector<Argument> &arguments() const { return m_arguments; }
-    const std::vector<std::unique_ptr<StackSlot>> &stack_slots() const { return m_stack_slots; }
+    const List<StackSlot> &stack_slots() const { return m_stack_slots; }
 };
-
-class FunctionIterator {
-    const std::vector<std::unique_ptr<BasicBlock>> *m_blocks;
-    std::size_t m_index;
-
-public:
-    FunctionIterator(const std::vector<std::unique_ptr<BasicBlock>> &blocks, std::size_t index)
-        : m_blocks(&blocks), m_index(index) {}
-
-    FunctionIterator &operator++() {
-        m_index++;
-        return *this;
-    }
-    FunctionIterator &operator--() {
-        m_index--;
-        return *this;
-    }
-
-    bool operator<=>(const FunctionIterator &) const = default;
-    BasicBlock *operator*() const { return (*m_blocks)[m_index].get(); }
-    std::size_t index() const { return m_index; }
-};
-
-inline FunctionIterator Function::begin() const {
-    return {m_blocks, 0};
-}
-
-inline FunctionIterator Function::end() const {
-    return {m_blocks, m_blocks.size()};
-}
 
 } // namespace ir

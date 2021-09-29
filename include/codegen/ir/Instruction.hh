@@ -1,6 +1,7 @@
 #pragma once
 
 #include <codegen/ir/Value.hh>
+#include <codegen/support/ListNode.hh>
 
 namespace ir {
 
@@ -17,7 +18,7 @@ enum class Opcode {
     Store,
 };
 
-class Instruction : public Value {
+class Instruction : public Value, public ListNode {
     const Opcode m_opcode;
 
 protected:

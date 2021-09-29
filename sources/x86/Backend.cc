@@ -32,7 +32,7 @@ public:
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
-    void visit(ir::LoadInst *) override;
+    void visit(ir::LoadInst *) override {}
     void visit(ir::RetInst *) override;
     void visit(ir::StoreInst *) override;
 
@@ -60,9 +60,9 @@ void Compiler::run(const ir::Function *function) {
     m_function = function;
     emit(Opcode::Lbl).lbl(function);
     if (!function->stack_slots().empty()) {
-        for (std::int32_t offset = 0; const auto &stack_slot : function->stack_slots()) {
+        for (std::int32_t offset = 0; const auto *stack_slot : function->stack_slots()) {
             offset -= 8;
-            m_stack_offsets.emplace(stack_slot.get(), offset);
+            m_stack_offsets.emplace(stack_slot, offset);
         }
         emit(Opcode::Push).reg(Register::rbp);
         emit(Opcode::Mov).reg(Register::rbp).reg(Register::rsp);
@@ -104,8 +104,6 @@ void Compiler::visit(ir::CopyInst *copy) {
     auto inst = emit(Opcode::Mov).reg(static_cast<Register>(copy->dst()->reg()));
     emit_rhs(inst, copy->src());
 }
-
-void Compiler::visit(ir::LoadInst *) {}
 
 void Compiler::visit(ir::RetInst *) {
     if (!m_function->stack_slots().empty()) {

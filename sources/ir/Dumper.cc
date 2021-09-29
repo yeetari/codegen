@@ -91,8 +91,8 @@ void Dumper::dump(BasicBlock &block) {
 }
 
 void Dumper::dump_stack_slots() {
-    for (const auto &stack_slot : m_function->stack_slots()) {
-        fmt::print("  {}: i32\n", value_string(stack_slot.get()));
+    for (auto *stack_slot : m_function->stack_slots()) {
+        fmt::print("  {}: i32\n", value_string(stack_slot));
     }
 }
 
