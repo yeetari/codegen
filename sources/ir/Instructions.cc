@@ -6,12 +6,13 @@
 
 namespace ir {
 
-AddInst::AddInst(Value *lhs, Value *rhs) : Instruction(Opcode::Add), m_lhs(lhs), m_rhs(rhs) {
+BinaryInst::BinaryInst(BinaryOp op, Value *lhs, Value *rhs)
+    : Instruction(Opcode::Binary), m_op(op), m_lhs(lhs), m_rhs(rhs) {
     lhs->add_user(this);
     rhs->add_user(this);
 }
 
-AddInst::~AddInst() {
+BinaryInst::~BinaryInst() {
     if (m_lhs != nullptr) {
         m_lhs->remove_user(this);
     }
@@ -20,11 +21,11 @@ AddInst::~AddInst() {
     }
 }
 
-void AddInst::accept(InstVisitor *visitor) {
+void BinaryInst::accept(InstVisitor *visitor) {
     visitor->visit(this);
 }
 
-void AddInst::replace_uses_of_with(Value *orig, Value *repl) {
+void BinaryInst::replace_uses_of_with(Value *orig, Value *repl) {
     if (m_lhs == orig) {
         m_lhs->remove_user(this);
         m_lhs = repl;
@@ -41,7 +42,7 @@ void AddInst::replace_uses_of_with(Value *orig, Value *repl) {
     }
 }
 
-void AddInst::set_lhs(Value *lhs) {
+void BinaryInst::set_lhs(Value *lhs) {
     ASSERT(lhs != nullptr);
     m_lhs->remove_user(this);
     m_lhs = lhs;

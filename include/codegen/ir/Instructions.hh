@@ -9,23 +9,30 @@ namespace ir {
 
 class BasicBlock;
 
-class AddInst final : public Instruction {
+enum class BinaryOp {
+    Add,
+    Sub,
+};
+
+class BinaryInst final : public Instruction {
+    const BinaryOp m_op;
     Value *m_lhs;
     Value *m_rhs;
 
 public:
-    AddInst(Value *lhs, Value *rhs);
-    AddInst(const AddInst &) = delete;
-    AddInst(AddInst &&) = delete;
-    ~AddInst() override;
+    BinaryInst(BinaryOp op, Value *lhs, Value *rhs);
+    BinaryInst(const BinaryInst &) = delete;
+    BinaryInst(BinaryInst &&) = delete;
+    ~BinaryInst() override;
 
-    AddInst &operator=(const AddInst &) = delete;
-    AddInst &operator=(AddInst &&) = delete;
+    BinaryInst &operator=(const BinaryInst &) = delete;
+    BinaryInst &operator=(BinaryInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_lhs(Value *lhs);
 
+    BinaryOp op() const { return m_op; }
     Value *lhs() const { return m_lhs; }
     Value *rhs() const { return m_rhs; }
 };

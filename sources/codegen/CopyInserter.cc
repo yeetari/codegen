@@ -19,7 +19,7 @@ public:
     explicit CopyInserter(Context &context) : m_context(context) {}
 
     void run(ir::Function *function);
-    void visit(ir::AddInst *) override;
+    void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
@@ -38,11 +38,11 @@ void CopyInserter::run(ir::Function *function) {
     }
 }
 
-void CopyInserter::visit(ir::AddInst *add) {
+void CopyInserter::visit(ir::BinaryInst *binary) {
     auto *copy = m_context.create_virtual();
-    m_block->insert<ir::CopyInst>(add, copy, add->lhs());
-    add->set_lhs(copy);
-    add->replace_all_uses_with(copy);
+    m_block->insert<ir::CopyInst>(binary, copy, binary->lhs());
+    binary->set_lhs(copy);
+    binary->replace_all_uses_with(copy);
 }
 
 void CopyInserter::visit(ir::CallInst *call) {

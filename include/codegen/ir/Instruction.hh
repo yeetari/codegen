@@ -8,7 +8,7 @@ namespace ir {
 class InstVisitor;
 
 enum class Opcode {
-    Add,
+    Binary,
     Branch,
     Call,
     CondBranch,

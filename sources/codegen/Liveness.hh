@@ -30,7 +30,7 @@ public:
     Liveness(ir::Function &function, const Graph<ir::BasicBlock> &cfg);
 
     bool live_at(const ir::Value *value, const ir::Instruction *point);
-    void visit(ir::AddInst *) override;
+    void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;

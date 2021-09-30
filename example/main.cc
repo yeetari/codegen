@@ -36,11 +36,11 @@ int main() {
     auto *callee_entry = callee->append_block();
     auto *true_dst = callee->append_block();
     auto *false_dst = callee->append_block();
-    auto *add1 = callee_entry->append<ir::AddInst>(ir::Constant::get(5), callee->argument(0));
+    auto *add1 = callee_entry->append<ir::BinaryInst>(ir::BinaryOp::Add, ir::Constant::get(5), callee->argument(0));
     callee_entry->append<ir::CondBranchInst>(ir::Constant::get(1), true_dst, false_dst);
-    auto *true_add = true_dst->append<ir::AddInst>(add1, callee->argument(1));
+    auto *true_add = true_dst->append<ir::BinaryInst>(ir::BinaryOp::Add, add1, callee->argument(1));
     true_dst->append<ir::RetInst>(true_add);
-    auto *false_add = false_dst->append<ir::AddInst>(add1, ir::Constant::get(40));
+    auto *false_add = false_dst->append<ir::BinaryInst>(ir::BinaryOp::Add, add1, ir::Constant::get(40));
     false_dst->append<ir::RetInst>(false_add);
 
     fmt::print("=====\n");

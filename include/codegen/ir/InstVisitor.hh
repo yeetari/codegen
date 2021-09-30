@@ -2,7 +2,7 @@
 
 namespace ir {
 
-class AddInst;
+class BinaryInst;
 class BranchInst;
 class CallInst;
 class CondBranchInst;
@@ -12,7 +12,7 @@ class RetInst;
 class StoreInst;
 
 struct InstVisitor {
-    virtual void visit(AddInst *) = 0;
+    virtual void visit(BinaryInst *) = 0;
     virtual void visit(BranchInst *) = 0;
     virtual void visit(CallInst *) = 0;
     virtual void visit(CondBranchInst *) = 0;

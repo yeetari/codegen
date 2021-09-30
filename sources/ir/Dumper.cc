@@ -29,7 +29,7 @@ public:
 
     void dump(BasicBlock &block);
     void dump_stack_slots();
-    void visit(AddInst *) override;
+    void visit(BinaryInst *) override;
     void visit(BranchInst *) override;
     void visit(CallInst *) override;
     void visit(CondBranchInst *) override;
@@ -96,8 +96,17 @@ void Dumper::dump_stack_slots() {
     }
 }
 
-void Dumper::visit(AddInst *add) {
-    fmt::print("add {}, {}", value_string(add->lhs()), value_string(add->rhs()));
+void Dumper::visit(BinaryInst *binary) {
+    auto op_string = [](BinaryOp op) -> std::string_view {
+        using namespace std::literals;
+        switch (op) {
+        case BinaryOp::Add:
+            return "add"sv;
+        case BinaryOp::Sub:
+            return "sub"sv;
+        }
+    };
+    fmt::print("{} {}, {}", op_string(binary->op()), value_string(binary->lhs()), value_string(binary->rhs()));
 }
 
 void Dumper::visit(BranchInst *branch) {

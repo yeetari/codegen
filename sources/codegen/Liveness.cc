@@ -73,10 +73,10 @@ bool Liveness::live_at(const ir::Value *value, const ir::Instruction *point) {
     return m_live_map[point][value];
 }
 
-void Liveness::visit(ir::AddInst *add) {
-    visit_def(add);
-    visit_use(add->lhs());
-    visit_use(add->rhs());
+void Liveness::visit(ir::BinaryInst *binary) {
+    visit_def(binary);
+    visit_use(binary->lhs());
+    visit_use(binary->rhs());
 }
 
 void Liveness::visit(ir::CallInst *call) {

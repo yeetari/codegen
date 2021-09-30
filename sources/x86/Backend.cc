@@ -27,7 +27,7 @@ class Compiler final : public ir::InstVisitor {
 
 public:
     void run(const ir::Function *function);
-    void visit(ir::AddInst *) override;
+    void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override;
     void visit(ir::CallInst *) override;
     void visit(ir::CondBranchInst *) override;
@@ -76,11 +76,19 @@ void Compiler::run(const ir::Function *function) {
     }
 }
 
-void Compiler::visit(ir::AddInst *add) {
-    const auto *lhs = add->lhs()->as_non_null<codegen::Register>();
+void Compiler::visit(ir::BinaryInst *binary) {
+    auto opcode = [](ir::BinaryOp op) {
+        switch (op) {
+        case ir::BinaryOp::Add:
+            return Opcode::Add;
+        case ir::BinaryOp::Sub:
+            return Opcode::Sub;
+        }
+    };
+    const auto *lhs = binary->lhs()->as_non_null<codegen::Register>();
     ASSERT(lhs->physical());
-    auto inst = emit(Opcode::Add).reg(static_cast<Register>(lhs->reg()));
-    emit_rhs(inst, add->rhs());
+    auto inst = emit(opcode(binary->op())).reg(static_cast<Register>(lhs->reg()));
+    emit_rhs(inst, binary->rhs());
 }
 
 void Compiler::visit(ir::BranchInst *branch) {
