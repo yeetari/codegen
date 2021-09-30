@@ -42,6 +42,7 @@ void CopyInserter::visit(ir::AddInst *add) {
     auto *copy = m_context.create_virtual();
     m_block->insert<ir::CopyInst>(add, copy, add->lhs());
     add->set_lhs(copy);
+    add->replace_all_uses_with(copy);
 }
 
 void CopyInserter::visit(ir::CallInst *call) {

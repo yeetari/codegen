@@ -126,7 +126,6 @@ void RegisterAllocator::visit(ir::AddInst *add) {
     if (auto *reg = add->rhs()->as<Register>()) {
         allocate(reg);
     }
-    add->replace_all_uses_with(add->lhs());
 }
 
 void RegisterAllocator::visit(ir::CondBranchInst *cond_branch) {
