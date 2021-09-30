@@ -20,6 +20,25 @@ std::uint8_t encode_arith(const MachineInst &inst, std::span<std::uint8_t, 16> e
         rex |= (1u << 0u); // REX.B
     }
     switch (inst.operands[1].type) {
+    case OperandType::BaseDisp: {
+        rex = 0x48;
+        if (lhs >= 8) {
+            rex |= (1u << 2u); // REX.R
+        }
+        auto base = static_cast<std::uint8_t>(inst.operands[1].base);
+        if (base >= 8) {
+            rex |= (1u << 0u); // REX.B
+        }
+        encoded[0] = rex;
+        if (inst.opcode == Opcode::Add) {
+            encoded[1] = 0x03; // add reg, r/m
+        } else {
+            encoded[1] = 0x2b; // sub reg, r/m
+        }
+        encoded[2] = emit_mod_rm(0b01, lhs, base);
+        encoded[3] = inst.operands[1].disp;
+        return 4;
+    }
     case OperandType::Imm: {
         // TODO: Emit special encoding for add/sub (al, ax, eax, rax), imm(8, 16, 32, 32).
         auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);

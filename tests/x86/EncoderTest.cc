@@ -23,6 +23,46 @@ std::pair<std::array<std::uint8_t, 16>, std::uint8_t> encode(const MachineInst &
     return std::make_pair(encoded, length);
 }
 
+TEST(x86EncoderTest, Add64Reg32Base32Disp8) {
+    BUILD(Opcode::Add).reg(Register::rax).base_disp(Register::rbp, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x48); // REX.W
+    EXPECT_EQ(encoded[1], 0x03); // add r64, r/m64
+    EXPECT_EQ(encoded[2], 0x45); // modrm(0b01, rax=0, [rbp]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Add64Reg32Base64Disp8) {
+    BUILD(Opcode::Add).reg(Register::rax).base_disp(Register::r11, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x49); // REX.W + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x03); // add r64, r/m64
+    EXPECT_EQ(encoded[2], 0x43); // modrm(0b01, rax=0, [r11-8=rbx]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Add64Reg64Base32Disp8) {
+    BUILD(Opcode::Add).reg(Register::r10).base_disp(Register::rbp, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x4c); // REX.W + REX.R(r10)
+    EXPECT_EQ(encoded[1], 0x03); // add r64, r/m64
+    EXPECT_EQ(encoded[2], 0x55); // modrm(0b01, r10=2, [rbp]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Add64Reg64Base64Disp8) {
+    BUILD(Opcode::Add).reg(Register::r10).base_disp(Register::r11, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x4d); // REX.W + REX.R(r10) + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x03); // add r64, r/m64
+    EXPECT_EQ(encoded[2], 0x53); // modrm(0b01, r10=2, [r11-8=rbx]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
 TEST(x86EncoderTest, Add64Reg32Imm8) {
     BUILD(Opcode::Add).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
@@ -156,7 +196,7 @@ TEST(x86EncoderTest, Mov64Base64Disp8Reg64) {
     BUILD(Opcode::Mov).base_disp(Register::r11, 0).reg(Register::r10);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
-    EXPECT_EQ(encoded[0], 0x4d); // REX.W + REX.R(10) + REX.B(r11)
+    EXPECT_EQ(encoded[0], 0x4d); // REX.W + REX.R(r10) + REX.B(r11)
     EXPECT_EQ(encoded[1], 0x89); // mov r/m64, r64
     EXPECT_EQ(encoded[2], 0x53); // modrm(0b01, r10=2, [r11-8=rbx]+disp8)
     EXPECT_EQ(encoded[3], 0x00);
@@ -255,6 +295,46 @@ TEST(x86EncoderTest, Ret) {
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 1);
     EXPECT_EQ(encoded[0], 0xc3); // ret
+}
+
+TEST(x86EncoderTest, Sub64Reg32Base32Disp8) {
+    BUILD(Opcode::Sub).reg(Register::rax).base_disp(Register::rbp, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x48); // REX.W
+    EXPECT_EQ(encoded[1], 0x2b); // sub r64, r/m64
+    EXPECT_EQ(encoded[2], 0x45); // modrm(0b01, rax=0, [rbp]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Sub64Reg32Base64Disp8) {
+    BUILD(Opcode::Sub).reg(Register::rax).base_disp(Register::r11, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x49); // REX.W + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x2b); // sub r64, r/m64
+    EXPECT_EQ(encoded[2], 0x43); // modrm(0b01, rax=0, [r11-8=rbx]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Sub64Reg64Base32Disp8) {
+    BUILD(Opcode::Sub).reg(Register::r10).base_disp(Register::rbp, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x4c); // REX.W + REX.R(r10)
+    EXPECT_EQ(encoded[1], 0x2b); // sub r64, r/m64
+    EXPECT_EQ(encoded[2], 0x55); // modrm(0b01, r10=2, [rbp]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
+}
+
+TEST(x86EncoderTest, Sub64Reg64Base64Disp8) {
+    BUILD(Opcode::Sub).reg(Register::r10).base_disp(Register::r11, 0);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x4d); // REX.W + REX.R(r10) + REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x2b); // sub r64, r/m64
+    EXPECT_EQ(encoded[2], 0x53); // modrm(0b01, r10=2, [r11-8=rbx]+disp8)
+    EXPECT_EQ(encoded[3], 0x00);
 }
 
 TEST(x86EncoderTest, Sub64Reg32Imm8) {
