@@ -7,8 +7,8 @@ class ListNode {
     friend class List;
 
 private:
-    ListNode *m_prev{nullptr};
-    ListNode *m_next{nullptr};
+    mutable const ListNode *m_prev{nullptr};
+    mutable const ListNode *m_next{nullptr};
 
 public:
     ListNode() = default;
@@ -19,6 +19,6 @@ public:
     ListNode &operator=(const ListNode &) = delete;
     ListNode &operator=(ListNode &&) = delete;
 
-    ListNode *prev() const { return m_prev; }
-    ListNode *next() const { return m_next; }
+    ListNode *prev() const { return const_cast<ListNode *>(m_prev); }
+    ListNode *next() const { return const_cast<ListNode *>(m_next); }
 };
