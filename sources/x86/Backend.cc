@@ -136,7 +136,8 @@ std::vector<MachineInst> compile(const ir::Unit &unit) {
     return std::move(compiler.insts());
 }
 
-std::vector<std::uint8_t> encode(const std::vector<MachineInst> &insts) {
+std::pair<std::size_t, std::vector<std::uint8_t>> encode(const std::vector<MachineInst> &insts,
+                                                         const ir::Function *entry) {
     std::unordered_map<const void *, std::size_t> label_map;
     for (std::size_t length = 0; auto inst : insts) {
         switch (inst.opcode) {
@@ -189,7 +190,7 @@ std::vector<std::uint8_t> encode(const std::vector<MachineInst> &insts) {
         ret.resize(ret.size() + length);
         std::copy_n(encoded.begin(), length, ret.end() - length);
     }
-    return ret;
+    return std::make_pair(label_map.at(entry), std::move(ret));
 }
 
 } // namespace x86
