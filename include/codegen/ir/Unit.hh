@@ -17,6 +17,7 @@ public:
     auto end() const { return m_functions.end(); }
 
     Function *append_function(std::string name, std::size_t argument_count);
+    Function *find_function(std::string_view name);
 };
 
 } // namespace ir
