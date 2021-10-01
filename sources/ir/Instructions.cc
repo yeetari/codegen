@@ -105,10 +105,12 @@ void CallInst::replace_uses_of_with(Value *orig, Value *repl) {
         }
     }
     for (auto *&arg : m_args) {
-        arg->remove_user(this);
-        arg = repl;
-        if (arg != nullptr) {
-            arg->add_user(this);
+        if (arg == orig) {
+            arg->remove_user(this);
+            arg = repl;
+            if (arg != nullptr) {
+                arg->add_user(this);
+            }
         }
     }
 }
