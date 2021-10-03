@@ -1,20 +1,20 @@
 #pragma once
 
-#include <codegen/graph/Graph.hh>
-#include <codegen/ir/InstVisitor.hh>
+#include <coel/graph/Graph.hh>
+#include <coel/ir/InstVisitor.hh>
 
 #include <unordered_map>
 
-namespace ir {
+namespace coel::ir {
 
 class BasicBlock;
 class Function;
 class Instruction;
 class Value;
 
-} // namespace ir
+} // namespace coel::ir
 
-namespace codegen {
+namespace coel::codegen {
 
 class Liveness final : public ir::InstVisitor {
     const Graph<ir::BasicBlock> *const m_cfg;
@@ -41,4 +41,4 @@ public:
     void visit(ir::StoreInst *) override {}
 };
 
-} // namespace codegen
+} // namespace coel::codegen

@@ -1,20 +1,20 @@
-#include <codegen/x86/Backend.hh>
+#include <coel/x86/Backend.hh>
 
-#include <codegen/graph/DepthFirstSearch.hh>
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/Constant.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/ir/Unit.hh>
-#include <codegen/support/Assert.hh>
-#include <codegen/x86/Builder.hh>
-#include <codegen/x86/Register.hh>
+#include <coel/graph/DepthFirstSearch.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/Constant.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/ir/Unit.hh>
+#include <coel/support/Assert.hh>
+#include <coel/x86/Builder.hh>
+#include <coel/x86/Register.hh>
 
 #include <unordered_map>
 #include <vector>
 
-namespace x86 {
+namespace coel::x86 {
 namespace {
 
 class Compiler final : public ir::InstVisitor {
@@ -55,7 +55,7 @@ void Compiler::emit_rhs(Builder inst, ir::Value *rhs) {
         const auto *stack_slot = load->ptr()->as_non_null<ir::StackSlot>();
         inst.base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
     } else {
-        ENSURE_NOT_REACHED();
+        COEL_ENSURE_NOT_REACHED();
     }
 }
 
@@ -89,7 +89,7 @@ void Compiler::visit(ir::BinaryInst *binary) {
         }
     };
     const auto *lhs = binary->lhs()->as_non_null<codegen::Register>();
-    ASSERT(lhs->physical());
+    COEL_ASSERT(lhs->physical());
     auto inst = emit(opcode(binary->op())).reg(static_cast<Register>(lhs->reg()));
     emit_rhs(inst, binary->rhs());
 }
@@ -104,7 +104,7 @@ void Compiler::visit(ir::CallInst *call) {
 
 void Compiler::visit(ir::CompareInst *compare) {
     const auto *lhs = compare->lhs()->as_non_null<codegen::Register>();
-    ASSERT(lhs->physical());
+    COEL_ASSERT(lhs->physical());
     auto cmp = emit(Opcode::Cmp).reg(static_cast<Register>(lhs->reg()));
     emit_rhs(cmp, compare->rhs());
     auto opcode = [](ir::CompareOp op) -> Opcode {
@@ -128,14 +128,14 @@ void Compiler::visit(ir::CompareInst *compare) {
 
 void Compiler::visit(ir::CondBranchInst *cond_branch) {
     const auto *cond = cond_branch->cond()->as_non_null<codegen::Register>();
-    ASSERT(cond->physical());
+    COEL_ASSERT(cond->physical());
     emit(Opcode::Cmp).reg(static_cast<Register>(cond->reg())).imm(1);
     emit(Opcode::JeLbl).lbl(cond_branch->true_dst());
     emit(Opcode::JmpLbl).lbl(cond_branch->false_dst());
 }
 
 void Compiler::visit(ir::CopyInst *copy) {
-    ASSERT(copy->dst()->physical());
+    COEL_ASSERT(copy->dst()->physical());
     auto inst = emit(Opcode::Mov).reg(static_cast<Register>(copy->dst()->reg()));
     emit_rhs(inst, copy->src());
 }
@@ -220,4 +220,4 @@ std::pair<std::size_t, std::vector<std::uint8_t>> encode(const std::vector<Machi
     return std::make_pair(label_map.at(entry), std::move(ret));
 }
 
-} // namespace x86
+} // namespace coel::x86

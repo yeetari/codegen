@@ -1,9 +1,9 @@
-#include <codegen/ir/Constant.hh>
+#include <coel/ir/Constant.hh>
 
 #include <memory>
 #include <vector>
 
-namespace ir {
+namespace coel::ir {
 namespace {
 
 std::vector<std::unique_ptr<ir::Constant>> s_constants;
@@ -14,4 +14,4 @@ Constant *Constant::get(std::size_t value) {
     return s_constants.emplace_back(new Constant(value)).get();
 }
 
-} // namespace ir
+} // namespace coel::ir

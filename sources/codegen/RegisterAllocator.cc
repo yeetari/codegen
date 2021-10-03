@@ -1,24 +1,24 @@
-#include <codegen/codegen/RegisterAllocator.hh>
+#include <coel/codegen/RegisterAllocator.hh>
 
 #include "Liveness.hh"
 
-#include <codegen/codegen/Context.hh>
-#include <codegen/codegen/Register.hh>
-#include <codegen/graph/DominanceComputer.hh>
-#include <codegen/graph/DominatorTree.hh>
-#include <codegen/graph/Graph.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/ir/Unit.hh>
-#include <codegen/support/Assert.hh>
-#include <codegen/x86/Register.hh>
+#include <coel/codegen/Context.hh>
+#include <coel/codegen/Register.hh>
+#include <coel/graph/DominanceComputer.hh>
+#include <coel/graph/DominatorTree.hh>
+#include <coel/graph/Graph.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/ir/Unit.hh>
+#include <coel/support/Assert.hh>
+#include <coel/x86/Register.hh>
 
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
-namespace codegen {
+namespace coel::codegen {
 namespace {
 
 class RegisterAllocator final : public ir::InstVisitor {
@@ -85,7 +85,7 @@ void RegisterAllocator::allocate(Register *virt) {
         m_matrix[phys] = virt;
         return;
     }
-    ENSURE_NOT_REACHED("Ran out of registers");
+    COEL_ENSURE_NOT_REACHED("Ran out of registers");
 }
 
 void RegisterAllocator::run(ir::Function *function) {
@@ -163,4 +163,4 @@ void register_allocate(Context &context) {
     }
 }
 
-} // namespace codegen
+} // namespace coel::codegen

@@ -1,14 +1,14 @@
-#include <codegen/codegen/CopyInserter.hh>
+#include <coel/codegen/CopyInserter.hh>
 
-#include <codegen/codegen/Context.hh>
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/ir/Unit.hh>
-#include <codegen/support/Assert.hh>
+#include <coel/codegen/Context.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/ir/Unit.hh>
+#include <coel/support/Assert.hh>
 
-namespace codegen {
+namespace coel::codegen {
 namespace {
 
 class CopyInserter final : public ir::InstVisitor {
@@ -93,4 +93,4 @@ void insert_copies(Context &context) {
     }
 }
 
-} // namespace codegen
+} // namespace coel::codegen

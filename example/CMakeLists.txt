@@ -1,1 +1,1 @@
-target_sources(codegen-example PRIVATE main.cc)
+target_sources(coel-example PRIVATE main.cc)

@@ -1,22 +1,24 @@
-#include <codegen/codegen/Context.hh>
-#include <codegen/codegen/CopyInserter.hh>
-#include <codegen/codegen/RegisterAllocator.hh>
-#include <codegen/graph/DepthFirstSearch.hh>
-#include <codegen/graph/DotGraph.hh>
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/Constant.hh>
-#include <codegen/ir/Dumper.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/ir/Unit.hh>
-#include <codegen/support/Assert.hh>
-#include <codegen/x86/Backend.hh>
+#include <coel/codegen/Context.hh>
+#include <coel/codegen/CopyInserter.hh>
+#include <coel/codegen/RegisterAllocator.hh>
+#include <coel/graph/DepthFirstSearch.hh>
+#include <coel/graph/DotGraph.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/Constant.hh>
+#include <coel/ir/Dumper.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/ir/Unit.hh>
+#include <coel/support/Assert.hh>
+#include <coel/x86/Backend.hh>
 
 #include <fmt/core.h>
 
 #include <fstream>
 #include <sstream>
 #include <sys/mman.h>
+
+using namespace coel;
 
 int main() {
     ir::Unit unit;

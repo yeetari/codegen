@@ -1,11 +1,11 @@
-#include <codegen/x86/Builder.hh>
+#include <coel/x86/Builder.hh>
 
-#include <codegen/x86/MachineInst.hh>
-#include <codegen/x86/Register.hh>
+#include <coel/x86/MachineInst.hh>
+#include <coel/x86/Register.hh>
 
 #include <cstdint>
 
-namespace x86 {
+namespace coel::x86 {
 
 Builder Builder::base_disp(Register base, std::int32_t disp) {
     m_inst->operands[m_operand_count].type = OperandType::BaseDisp;
@@ -38,4 +38,4 @@ Builder Builder::reg(Register op) {
     return *this;
 }
 
-} // namespace x86
+} // namespace coel::x86

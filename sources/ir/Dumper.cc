@@ -1,19 +1,19 @@
-#include <codegen/ir/Dumper.hh>
+#include <coel/ir/Dumper.hh>
 
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/Constant.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/ir/Unit.hh>
-#include <codegen/support/Assert.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/Constant.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/ir/Unit.hh>
+#include <coel/support/Assert.hh>
 
 #include <fmt/core.h>
 
 #include <string>
 #include <unordered_map>
 
-namespace ir {
+namespace coel::ir {
 namespace {
 
 class Dumper final : public InstVisitor {
@@ -189,4 +189,4 @@ void dump(Unit &unit) {
     }
 }
 
-} // namespace ir
+} // namespace coel::ir

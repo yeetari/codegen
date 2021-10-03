@@ -1,10 +1,10 @@
-#include <codegen/ir/Instructions.hh>
+#include <coel/ir/Instructions.hh>
 
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/support/Assert.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/support/Assert.hh>
 
-namespace ir {
+namespace coel::ir {
 
 BinaryInst::BinaryInst(BinaryOp op, Value *lhs, Value *rhs)
     : Instruction(Opcode::Binary), m_op(op), m_lhs(lhs), m_rhs(rhs) {
@@ -43,7 +43,7 @@ void BinaryInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void BinaryInst::set_lhs(Value *lhs) {
-    ASSERT(lhs != nullptr);
+    COEL_ASSERT(lhs != nullptr);
     m_lhs->remove_user(this);
     m_lhs = lhs;
     m_lhs->add_user(this);
@@ -152,7 +152,7 @@ void CompareInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void CompareInst::set_lhs(Value *lhs) {
-    ASSERT(lhs != nullptr);
+    COEL_ASSERT(lhs != nullptr);
     m_lhs->remove_user(this);
     m_lhs = lhs;
     m_lhs->add_user(this);
@@ -178,8 +178,8 @@ void CondBranchInst::accept(InstVisitor *visitor) {
 }
 
 void CondBranchInst::replace_uses_of_with(Value *orig, Value *repl) {
-    ASSERT(orig != m_true_dst);
-    ASSERT(orig != m_false_dst);
+    COEL_ASSERT(orig != m_true_dst);
+    COEL_ASSERT(orig != m_false_dst);
     if (m_cond == orig) {
         m_cond->remove_user(this);
         m_cond = repl;
@@ -190,7 +190,7 @@ void CondBranchInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void CondBranchInst::set_cond(Value *cond) {
-    ASSERT(cond != nullptr);
+    COEL_ASSERT(cond != nullptr);
     m_cond->remove_user(this);
     m_cond = cond;
     m_cond->add_user(this);
@@ -211,7 +211,7 @@ void CopyInst::accept(InstVisitor *visitor) {
 }
 
 void CopyInst::replace_uses_of_with(Value *orig, Value *repl) {
-    ASSERT(m_dst != orig);
+    COEL_ASSERT(m_dst != orig);
     if (m_src == orig) {
         m_src->remove_user(this);
         m_src = repl;
@@ -270,7 +270,7 @@ void RetInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void RetInst::set_value(Value *value) {
-    ASSERT(value != nullptr);
+    COEL_ASSERT(value != nullptr);
     m_value->remove_user(this);
     m_value = value;
     m_value->add_user(this);
@@ -312,10 +312,10 @@ void StoreInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 void StoreInst::set_value(Value *value) {
-    ASSERT(value != nullptr);
+    COEL_ASSERT(value != nullptr);
     m_value->remove_user(this);
     m_value = value;
     m_value->add_user(this);
 }
 
-} // namespace ir
+} // namespace coel::ir

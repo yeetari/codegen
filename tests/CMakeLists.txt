@@ -1,1 +1,1 @@
-target_sources(codegen-tests PRIVATE x86/EncoderTest.cc)
+target_sources(coel-tests PRIVATE x86/EncoderTest.cc)

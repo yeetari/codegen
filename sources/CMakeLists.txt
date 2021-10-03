@@ -1,4 +1,4 @@
-target_sources(codegen PRIVATE
+target_sources(coel PRIVATE
     codegen/CopyInserter.cc
     codegen/Liveness.cc
     codegen/RegisterAllocator.cc

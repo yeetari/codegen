@@ -1,6 +1,6 @@
-#include <codegen/ir/Unit.hh>
+#include <coel/ir/Unit.hh>
 
-namespace ir {
+namespace coel::ir {
 
 Function *Unit::append_function(std::string name, std::size_t argument_count) {
     return m_functions.emplace<Function>(m_functions.end(), std::move(name), argument_count);
@@ -15,4 +15,4 @@ Function *Unit::find_function(std::string_view name) {
     return nullptr;
 }
 
-} // namespace ir
+} // namespace coel::ir

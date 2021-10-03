@@ -1,9 +1,9 @@
-#include <codegen/ir/BasicBlock.hh>
+#include <coel/ir/BasicBlock.hh>
 
-#include <codegen/ir/Instruction.hh>
+#include <coel/ir/Instruction.hh>
 
-namespace ir {
+namespace coel::ir {
 
 BasicBlock::~BasicBlock() = default;
 
-} // namespace ir
+} // namespace coel::ir

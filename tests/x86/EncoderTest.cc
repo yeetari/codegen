@@ -1,11 +1,11 @@
-#include <codegen/x86/Builder.hh>
-#include <codegen/x86/MachineInst.hh>
+#include <coel/x86/Builder.hh>
+#include <coel/x86/MachineInst.hh>
 
 #include <gtest/gtest.h>
 
 #include <array>
 
-namespace x86 {
+namespace coel::x86 {
 namespace {
 
 #define BUILD(op)                                                                                                      \
@@ -469,4 +469,4 @@ TEST(x86EncoderTest, Sub64Reg64Reg64) {
 }
 
 } // namespace
-} // namespace x86
+} // namespace coel::x86

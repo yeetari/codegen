@@ -1,16 +1,16 @@
 #include "Liveness.hh"
 
-#include <codegen/ir/BasicBlock.hh>
-#include <codegen/ir/Function.hh>
-#include <codegen/ir/InstVisitor.hh>
-#include <codegen/ir/Instructions.hh>
-#include <codegen/support/Assert.hh>
+#include <coel/ir/BasicBlock.hh>
+#include <coel/ir/Function.hh>
+#include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Instructions.hh>
+#include <coel/support/Assert.hh>
 
-namespace codegen {
+namespace coel::codegen {
 
 Liveness::Liveness(ir::Function &function, const Graph<ir::BasicBlock> &cfg) : m_cfg(&cfg) {
     for (const auto &argument : function.arguments()) {
-        ASSERT(!m_def_map.contains(&argument));
+        COEL_ASSERT(!m_def_map.contains(&argument));
         m_def_map.emplace(&argument, cfg.entry());
     }
     for (auto *block : function) {
@@ -23,7 +23,7 @@ Liveness::Liveness(ir::Function &function, const Graph<ir::BasicBlock> &cfg) : m
 }
 
 void Liveness::visit_def(const ir::Value *value) {
-    ASSERT(!m_def_map.contains(value));
+    COEL_ASSERT(!m_def_map.contains(value));
     m_def_map.emplace(value, m_block);
 }
 
@@ -109,4 +109,4 @@ void Liveness::visit(ir::RetInst *ret) {
     visit_use(ret->value());
 }
 
-} // namespace codegen
+} // namespace coel::codegen
