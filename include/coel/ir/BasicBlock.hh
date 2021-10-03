@@ -40,6 +40,9 @@ public:
 
     template <std::derived_from<Instruction> Inst, typename... Args>
     Inst *append(Args &&...args);
+
+    bool empty() const;
+    bool has_terminator() const;
 };
 
 inline auto BasicBlock::iterator(Instruction *position) const {
