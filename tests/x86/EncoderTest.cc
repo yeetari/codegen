@@ -337,6 +337,59 @@ TEST(x86EncoderTest, Ret) {
     EXPECT_EQ(encoded[0], 0xc3); // ret
 }
 
+class Setcc : public testing::TestWithParam<std::pair<Opcode, std::uint8_t>> {};
+
+TEST_P(Setcc, Setcc_al) {
+    auto [opcode, encoded_opcode] = GetParam();
+    BUILD(opcode).reg(Register::rax);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 3);
+    EXPECT_EQ(encoded[0], 0x0f);           // secondary opcode table
+    EXPECT_EQ(encoded[1], encoded_opcode); // setcc r/m
+    EXPECT_EQ(encoded[2], 0xc0);           // modrm(0b11, 0, al=0)
+}
+
+TEST_P(Setcc, Setcc_spl) {
+    auto [opcode, encoded_opcode] = GetParam();
+    BUILD(opcode).reg(Register::rsp);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x40);           // REX
+    EXPECT_EQ(encoded[1], 0x0f);           // secondary opcode table
+    EXPECT_EQ(encoded[2], encoded_opcode); // setcc r/m
+    EXPECT_EQ(encoded[3], 0xc4);           // modrm(0b11, 0, spl=4)
+}
+
+TEST_P(Setcc, Setcc_sil) {
+    auto [opcode, encoded_opcode] = GetParam();
+    BUILD(opcode).reg(Register::rsi);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x40);           // REX
+    EXPECT_EQ(encoded[1], 0x0f);           // secondary opcode table
+    EXPECT_EQ(encoded[2], encoded_opcode); // setcc r/m
+    EXPECT_EQ(encoded[3], 0xc6);           // modrm(0b11, 0, sil=6)
+}
+
+TEST_P(Setcc, Setcc_r11b) {
+    auto [opcode, encoded_opcode] = GetParam();
+    BUILD(opcode).reg(Register::r11);
+    auto [encoded, length] = encode(inst);
+    EXPECT_EQ(length, 4);
+    EXPECT_EQ(encoded[0], 0x41);           // REX.B(r11)
+    EXPECT_EQ(encoded[1], 0x0f);           // secondary opcode table
+    EXPECT_EQ(encoded[2], encoded_opcode); // setcc r/m
+    EXPECT_EQ(encoded[3], 0xc3);           // modrm(0b11, 0, r11b=3)
+}
+
+INSTANTIATE_TEST_SUITE_P(x86EncoderTest, Setcc,
+                         testing::Values(std::pair<Opcode, std::uint8_t>(Opcode::Sete, 0x94),
+                                         std::pair<Opcode, std::uint8_t>(Opcode::Setne, 0x95),
+                                         std::pair<Opcode, std::uint8_t>(Opcode::Setl, 0x9c),
+                                         std::pair<Opcode, std::uint8_t>(Opcode::Setg, 0x9f),
+                                         std::pair<Opcode, std::uint8_t>(Opcode::Setle, 0x9e),
+                                         std::pair<Opcode, std::uint8_t>(Opcode::Setge, 0x9d)));
+
 TEST(x86EncoderTest, Sub64Reg32Base32Disp8) {
     BUILD(Opcode::Sub).reg(Register::rax).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);

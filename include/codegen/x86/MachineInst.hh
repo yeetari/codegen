@@ -21,6 +21,12 @@ enum class Opcode {
     Call,
     Je,
     Jmp,
+    Sete,
+    Setne,
+    Setl,
+    Setg,
+    Setle,
+    Setge,
 
     Lbl,
     CallLbl,

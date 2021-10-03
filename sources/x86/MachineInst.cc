@@ -251,6 +251,43 @@ std::uint8_t encode_jmp(const MachineInst &inst, std::span<std::uint8_t, 16> enc
     return 2;
 }
 
+std::uint8_t encode_setcc(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    ASSERT(inst.operands[0].type == OperandType::Reg);
+    auto reg = static_cast<std::uint8_t>(inst.operands[0].reg);
+    std::uint8_t length = 0;
+    if (reg >= 4) {
+        encoded[length++] = reg >= 8 ? 0x41 : 0x40;
+    }
+    if (reg >= 8) {
+        reg -= 8;
+    }
+    encoded[length++] = 0x0f;
+    switch (inst.opcode) {
+    case Opcode::Sete:
+        encoded[length++] = 0x94;
+        break;
+    case Opcode::Setne:
+        encoded[length++] = 0x95;
+        break;
+    case Opcode::Setl:
+        encoded[length++] = 0x9c;
+        break;
+    case Opcode::Setg:
+        encoded[length++] = 0x9f;
+        break;
+    case Opcode::Setle:
+        encoded[length++] = 0x9e;
+        break;
+    case Opcode::Setge:
+        encoded[length++] = 0x9d;
+        break;
+    default:
+        ENSURE_NOT_REACHED();
+    }
+    encoded[length++] = emit_mod_rm(0b11, 0, reg);
+    return length;
+}
+
 const std::array s_functions{
     &encode_arith,
     &encode_cmp,
@@ -263,6 +300,12 @@ const std::array s_functions{
     &encode_call,
     &encode_je,
     &encode_jmp,
+    &encode_setcc,
+    &encode_setcc,
+    &encode_setcc,
+    &encode_setcc,
+    &encode_setcc,
+    &encode_setcc,
 };
 
 } // namespace
