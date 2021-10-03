@@ -80,9 +80,7 @@ void Dumper::dump(BasicBlock &block) {
     fmt::print("  {} {{\n", value_string(&block));
     for (auto *inst : block) {
         fmt::print("    ");
-        // TODO: inst->is_terminator()
-        if (!inst->is<BranchInst>() && !inst->is<CondBranchInst>() && !inst->is<CopyInst>() && !inst->is<RetInst>() &&
-            !inst->is<StoreInst>()) {
+        if (!inst->is_terminator() && !inst->is<CopyInst>() && !inst->is<StoreInst>()) {
             fmt::print("{} = ", value_string(inst));
         }
         inst->accept(this);

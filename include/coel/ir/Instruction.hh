@@ -27,6 +27,7 @@ protected:
 
 public:
     virtual void accept(InstVisitor *visitor) = 0;
+    virtual bool is_terminator() const = 0;
 
     Opcode opcode() const { return m_opcode; }
 };

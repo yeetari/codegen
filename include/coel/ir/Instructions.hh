@@ -29,6 +29,7 @@ public:
     BinaryInst &operator=(BinaryInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_lhs(Value *lhs);
 
@@ -50,6 +51,7 @@ public:
     BranchInst &operator=(BranchInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return true; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
 
     BasicBlock *dst() const { return m_dst; }
@@ -69,6 +71,7 @@ public:
     CallInst &operator=(CallInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
 
     Value *callee() const { return m_callee; }
@@ -99,6 +102,7 @@ public:
     CompareInst &operator=(CompareInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_lhs(Value *lhs);
 
@@ -122,6 +126,7 @@ public:
     CondBranchInst &operator=(CondBranchInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return true; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_cond(Value *cond);
 
@@ -144,6 +149,7 @@ public:
     CopyInst &operator=(CopyInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
 
     codegen::Register *dst() const { return m_dst; }
@@ -163,6 +169,7 @@ public:
     LoadInst &operator=(LoadInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
 
     Value *ptr() const { return m_ptr; }
@@ -181,6 +188,7 @@ public:
     RetInst &operator=(RetInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return true; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_value(Value *value);
 
@@ -201,6 +209,7 @@ public:
     StoreInst &operator=(StoreInst &&) = delete;
 
     void accept(InstVisitor *visitor) override;
+    bool is_terminator() const override { return false; }
     void replace_uses_of_with(Value *orig, Value *repl) override;
     void set_value(Value *value);
 
