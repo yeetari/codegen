@@ -120,7 +120,7 @@ ListIterator<T> List<T>::end() const {
 
 template <std::derived_from<ListNode> T>
 bool List<T>::empty() const {
-    return size() == 0;
+    return begin() == end();
 }
 
 template <std::derived_from<ListNode> T>
