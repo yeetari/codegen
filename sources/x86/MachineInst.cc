@@ -70,19 +70,46 @@ std::uint8_t encode_arith(const MachineInst &inst, std::span<std::uint8_t, 16> e
 
 std::uint8_t encode_cmp(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
     // TODO: Emit special encoding for cmp (al, ax, eax, rax), imm(8, 16, 32, 64).
-    ASSERT(inst.operands[0].type == OperandType::Reg && inst.operands[1].type == OperandType::Imm);
+    ASSERT(inst.operands[0].type == OperandType::Reg);
     auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
-    auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
-    ASSERT(rhs <= 0x7f);
     if (lhs >= 8) {
         encoded[0] = 0x49; // REX.W + REX.B
     } else {
         encoded[0] = 0x48; // REX.W
     }
-    encoded[1] = 0x83; // cmp r/m, imm8
-    encoded[2] = emit_mod_rm(0b11, 7, lhs);
-    encoded[3] = rhs;
-    return 4;
+    switch (inst.operands[1].type) {
+    case OperandType::BaseDisp: {
+        auto base = static_cast<std::uint8_t>(inst.operands[1].base);
+        std::uint8_t rex = 0x48;
+        if (lhs >= 8) {
+            rex |= (1u << 2u); // REX.R
+        }
+        if (base >= 8) {
+            rex |= (1u << 0u); // REX.B
+        }
+        encoded[0] = rex;
+        encoded[1] = 0x3b; // cmp reg, r/m
+        encoded[2] = emit_mod_rm(0b01, lhs, base);
+        encoded[3] = inst.operands[1].disp;
+        return 4;
+    }
+    case OperandType::Imm: {
+        auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
+        ASSERT(rhs <= 0x7f);
+        encoded[1] = 0x83; // cmp r/m, imm8
+        encoded[2] = emit_mod_rm(0b11, 7, lhs);
+        encoded[3] = rhs;
+        return 4;
+    }
+    case OperandType::Reg: {
+        auto rhs = static_cast<std::uint8_t>(inst.operands[1].reg);
+        encoded[1] = 0x39; // cmp r/m, reg
+        encoded[2] = emit_mod_rm(0b11, rhs, lhs);
+        return 3;
+    }
+    default:
+        ENSURE_NOT_REACHED();
+    }
 }
 
 std::uint8_t encode_leave(const MachineInst &, std::span<std::uint8_t, 16> encoded) {
