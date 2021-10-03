@@ -30,6 +30,7 @@ public:
     void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override;
     void visit(ir::CallInst *) override;
+    void visit(ir::CompareInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::LoadInst *) override {}
@@ -53,6 +54,8 @@ void Compiler::emit_rhs(Builder inst, ir::Value *rhs) {
     } else if (auto *load = rhs->as<ir::LoadInst>()) {
         const auto *stack_slot = load->ptr()->as_non_null<ir::StackSlot>();
         inst.base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
+    } else {
+        ENSURE_NOT_REACHED();
     }
 }
 
@@ -97,6 +100,30 @@ void Compiler::visit(ir::BranchInst *branch) {
 
 void Compiler::visit(ir::CallInst *call) {
     emit(Opcode::CallLbl).lbl(call->callee());
+}
+
+void Compiler::visit(ir::CompareInst *compare) {
+    const auto *lhs = compare->lhs()->as_non_null<codegen::Register>();
+    ASSERT(lhs->physical());
+    auto cmp = emit(Opcode::Cmp).reg(static_cast<Register>(lhs->reg()));
+    emit_rhs(cmp, compare->rhs());
+    auto opcode = [](ir::CompareOp op) -> Opcode {
+        switch (op) {
+        case ir::CompareOp::Eq:
+            return Opcode::Sete;
+        case ir::CompareOp::Ne:
+            return Opcode::Setne;
+        case ir::CompareOp::Lt:
+            return Opcode::Setl;
+        case ir::CompareOp::Gt:
+            return Opcode::Setg;
+        case ir::CompareOp::Le:
+            return Opcode::Setle;
+        case ir::CompareOp::Ge:
+            return Opcode::Setge;
+        }
+    };
+    emit(opcode(compare->op())).reg(static_cast<Register>(lhs->reg()));
 }
 
 void Compiler::visit(ir::CondBranchInst *cond_branch) {

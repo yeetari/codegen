@@ -11,6 +11,7 @@ enum class Opcode {
     Binary,
     Branch,
     Call,
+    Compare,
     CondBranch,
     Copy,
     Load,

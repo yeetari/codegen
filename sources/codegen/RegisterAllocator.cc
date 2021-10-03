@@ -36,6 +36,7 @@ public:
     void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override {}
+    void visit(ir::CompareInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::LoadInst *) override {}
@@ -124,6 +125,15 @@ void RegisterAllocator::visit(ir::BinaryInst *binary) {
         allocate(reg);
     }
     if (auto *reg = binary->rhs()->as<Register>()) {
+        allocate(reg);
+    }
+}
+
+void RegisterAllocator::visit(ir::CompareInst *compare) {
+    if (auto *reg = compare->lhs()->as<Register>()) {
+        allocate(reg);
+    }
+    if (auto *reg = compare->rhs()->as<Register>()) {
         allocate(reg);
     }
 }

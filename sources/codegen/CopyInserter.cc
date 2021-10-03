@@ -22,6 +22,7 @@ public:
     void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override;
+    void visit(ir::CompareInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override {}
     void visit(ir::LoadInst *) override {}
@@ -55,6 +56,13 @@ void CopyInserter::visit(ir::CallInst *call) {
     auto *copy = m_context.create_virtual();
     m_block->insert<ir::CopyInst>(++m_block->iterator(call), copy, m_context.create_physical(0));
     call->replace_all_uses_with(copy);
+}
+
+void CopyInserter::visit(ir::CompareInst *compare) {
+    auto *copy = m_context.create_virtual();
+    m_block->insert<ir::CopyInst>(compare, copy, compare->lhs());
+    compare->set_lhs(copy);
+    compare->replace_all_uses_with(copy);
 }
 
 void CopyInserter::visit(ir::CondBranchInst *cond_branch) {

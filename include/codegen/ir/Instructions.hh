@@ -75,6 +75,38 @@ public:
     const std::vector<Value *> &args() const { return m_args; }
 };
 
+enum class CompareOp {
+    Eq,
+    Ne,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+};
+
+class CompareInst final : public Instruction {
+    const CompareOp m_op;
+    Value *m_lhs;
+    Value *m_rhs;
+
+public:
+    CompareInst(CompareOp op, Value *lhs, Value *rhs);
+    CompareInst(const CompareInst &) = delete;
+    CompareInst(CompareInst &&) = delete;
+    ~CompareInst() override;
+
+    CompareInst &operator=(const CompareInst &) = delete;
+    CompareInst &operator=(CompareInst &&) = delete;
+
+    void accept(InstVisitor *visitor) override;
+    void replace_uses_of_with(Value *orig, Value *repl) override;
+    void set_lhs(Value *lhs);
+
+    CompareOp op() const { return m_op; }
+    Value *lhs() const { return m_lhs; }
+    Value *rhs() const { return m_rhs; }
+};
+
 class CondBranchInst final : public Instruction {
     Value *m_cond;
     BasicBlock *m_true_dst;

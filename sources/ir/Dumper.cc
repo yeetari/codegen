@@ -32,6 +32,7 @@ public:
     void visit(BinaryInst *) override;
     void visit(BranchInst *) override;
     void visit(CallInst *) override;
+    void visit(CompareInst *) override;
     void visit(CondBranchInst *) override;
     void visit(CopyInst *) override;
     void visit(LoadInst *) override;
@@ -123,6 +124,27 @@ void Dumper::visit(CallInst *call) {
         fmt::print("{}", value_string(arg));
     }
     fmt::print(")");
+}
+
+void Dumper::visit(CompareInst *compare) {
+    auto op_string = [](CompareOp op) -> std::string_view {
+        using namespace std::literals;
+        switch (op) {
+        case CompareOp::Eq:
+            return "cmp_eq"sv;
+        case CompareOp::Ne:
+            return "cmp_ne"sv;
+        case CompareOp::Lt:
+            return "cmp_lt"sv;
+        case CompareOp::Gt:
+            return "cmp_gt"sv;
+        case CompareOp::Le:
+            return "cmp_le"sv;
+        case CompareOp::Ge:
+            return "cmp_ge"sv;
+        }
+    };
+    fmt::print("{} {}, {}", op_string(compare->op()), value_string(compare->lhs()), value_string(compare->rhs()));
 }
 
 void Dumper::visit(CondBranchInst *cond_branch) {

@@ -33,6 +33,7 @@ public:
     void visit(ir::BinaryInst *) override;
     void visit(ir::BranchInst *) override {}
     void visit(ir::CallInst *) override;
+    void visit(ir::CompareInst *) override;
     void visit(ir::CondBranchInst *) override;
     void visit(ir::CopyInst *) override;
     void visit(ir::LoadInst *) override;

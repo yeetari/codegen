@@ -115,6 +115,49 @@ void CallInst::replace_uses_of_with(Value *orig, Value *repl) {
     }
 }
 
+CompareInst::CompareInst(CompareOp op, Value *lhs, Value *rhs)
+    : Instruction(Opcode::Compare), m_op(op), m_lhs(lhs), m_rhs(rhs) {
+    lhs->add_user(this);
+    rhs->add_user(this);
+}
+
+CompareInst::~CompareInst() {
+    if (m_lhs != nullptr) {
+        m_lhs->remove_user(this);
+    }
+    if (m_rhs != nullptr) {
+        m_rhs->remove_user(this);
+    }
+}
+
+void CompareInst::accept(InstVisitor *visitor) {
+    visitor->visit(this);
+}
+
+void CompareInst::replace_uses_of_with(Value *orig, Value *repl) {
+    if (m_lhs == orig) {
+        m_lhs->remove_user(this);
+        m_lhs = repl;
+        if (m_lhs != nullptr) {
+            m_lhs->add_user(this);
+        }
+    }
+    if (m_rhs == orig) {
+        m_rhs->remove_user(this);
+        m_rhs = repl;
+        if (m_rhs != nullptr) {
+            m_rhs->add_user(this);
+        }
+    }
+}
+
+void CompareInst::set_lhs(Value *lhs) {
+    ASSERT(lhs != nullptr);
+    m_lhs->remove_user(this);
+    m_lhs = lhs;
+    m_lhs->add_user(this);
+}
+
 CondBranchInst::CondBranchInst(Value *cond, BasicBlock *true_dst, BasicBlock *false_dst)
     : Instruction(Opcode::CondBranch), m_cond(cond), m_true_dst(true_dst), m_false_dst(false_dst) {
     cond->add_user(this);

@@ -86,6 +86,12 @@ void Liveness::visit(ir::CallInst *call) {
     }
 }
 
+void Liveness::visit(ir::CompareInst *compare) {
+    visit_def(compare);
+    visit_use(compare->lhs());
+    visit_use(compare->rhs());
+}
+
 void Liveness::visit(ir::CondBranchInst *cond_branch) {
     visit_use(cond_branch->cond());
 }
