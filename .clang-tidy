@@ -151,6 +151,6 @@ Checks: >
 FormatStyle: file
 CheckOptions:
   - key: bugprone-assert-side-effect.AssertMacros
-    value: ASSERT,ASSERT_PEDANTIC,ENSURE
+    value: COEL_ASSERT,COEL_ASSERT_PEDANTIC,COEL_ENSURE
   - key: readability-uppercase-literal-suffix.NewSuffixes
     value: u;l;ul;ull
