@@ -23,7 +23,7 @@ std::pair<std::array<std::uint8_t, 16>, std::uint8_t> encode(const MachineInst &
     return std::make_pair(encoded, length);
 }
 
-TEST(x86EncoderTest, Add64Reg32Base32Disp8) {
+TEST(x86EncoderTest, Add64Reg_raxBase_rbpDisp8) {
     BUILD(Opcode::Add).reg(Register::rax).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -33,7 +33,7 @@ TEST(x86EncoderTest, Add64Reg32Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg32Base64Disp8) {
+TEST(x86EncoderTest, Add64Reg_raxBase_r11Disp8) {
     BUILD(Opcode::Add).reg(Register::rax).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -43,7 +43,7 @@ TEST(x86EncoderTest, Add64Reg32Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg64Base32Disp8) {
+TEST(x86EncoderTest, Add64Reg_r10Base_rbpDisp8) {
     BUILD(Opcode::Add).reg(Register::r10).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -53,7 +53,7 @@ TEST(x86EncoderTest, Add64Reg64Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg64Base64Disp8) {
+TEST(x86EncoderTest, Add64Reg_r10Base_r11Disp8) {
     BUILD(Opcode::Add).reg(Register::r10).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -63,7 +63,7 @@ TEST(x86EncoderTest, Add64Reg64Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg32Imm8) {
+TEST(x86EncoderTest, Add64Reg_rbxImm8) {
     BUILD(Opcode::Add).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -73,7 +73,7 @@ TEST(x86EncoderTest, Add64Reg32Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg64Imm8) {
+TEST(x86EncoderTest, Add64Reg_r11Imm8) {
     BUILD(Opcode::Add).reg(Register::r11).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -83,7 +83,7 @@ TEST(x86EncoderTest, Add64Reg64Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Add64Reg32Reg32) {
+TEST(x86EncoderTest, Add64Reg_raxReg_rbx) {
     BUILD(Opcode::Add).reg(Register::rax).reg(Register::rbx);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
@@ -92,7 +92,7 @@ TEST(x86EncoderTest, Add64Reg32Reg32) {
     EXPECT_EQ(encoded[2], 0xd8); // modrm(0b11, rbx=3, rax=0)
 }
 
-TEST(x86EncoderTest, Add64Reg64Reg64) {
+TEST(x86EncoderTest, Add64Reg_r11Reg_r12) {
     BUILD(Opcode::Add).reg(Register::r11).reg(Register::r12);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
@@ -112,7 +112,7 @@ TEST(x86EncoderTest, CallOff32) {
     EXPECT_EQ(encoded[4], 0xff);
 }
 
-TEST(x86EncoderTest, Cmp64Reg32Base32Disp8) {
+TEST(x86EncoderTest, Cmp64Reg_raxBase_rbpDisp8) {
     BUILD(Opcode::Cmp).reg(Register::rax).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -122,7 +122,7 @@ TEST(x86EncoderTest, Cmp64Reg32Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Cmp64Reg32Base64Disp8) {
+TEST(x86EncoderTest, Cmp64Reg_raxBase_r11Disp8) {
     BUILD(Opcode::Cmp).reg(Register::rax).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -132,7 +132,7 @@ TEST(x86EncoderTest, Cmp64Reg32Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Cmp64Reg64Base32Disp8) {
+TEST(x86EncoderTest, Cmp64Reg_r10Base_rbpDisp8) {
     BUILD(Opcode::Cmp).reg(Register::r10).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -142,7 +142,7 @@ TEST(x86EncoderTest, Cmp64Reg64Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Cmp64Reg64Base64Disp8) {
+TEST(x86EncoderTest, Cmp64Reg_r10Base_r11Disp8) {
     BUILD(Opcode::Sub).reg(Register::r10).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -152,7 +152,7 @@ TEST(x86EncoderTest, Cmp64Reg64Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Cmp64Reg32Imm8) {
+TEST(x86EncoderTest, Cmp64Reg_rbxImm8) {
     BUILD(Opcode::Cmp).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -162,7 +162,7 @@ TEST(x86EncoderTest, Cmp64Reg32Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Cmp64Reg64Imm8) {
+TEST(x86EncoderTest, Cmp64Reg_r11Imm8) {
     BUILD(Opcode::Cmp).reg(Register::r11).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -179,7 +179,7 @@ TEST(x86EncoderTest, Leave64) {
     EXPECT_EQ(encoded[0], 0xc9); // leave
 }
 
-TEST(x86EncoderTest, Mov32Reg32Imm32) {
+TEST(x86EncoderTest, Mov32Reg_ebxImm32) {
     BUILD(Opcode::Mov).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 5);
@@ -190,7 +190,7 @@ TEST(x86EncoderTest, Mov32Reg32Imm32) {
     EXPECT_EQ(encoded[4], 0x00);
 }
 
-TEST(x86EncoderTest, Mov32Reg64Imm32) {
+TEST(x86EncoderTest, Mov32Reg_r11dImm32) {
     BUILD(Opcode::Mov).reg(Register::r11).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 6);
@@ -202,7 +202,7 @@ TEST(x86EncoderTest, Mov32Reg64Imm32) {
     EXPECT_EQ(encoded[5], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Base32Disp8Reg32) {
+TEST(x86EncoderTest, Mov64Base_rbpDisp8Reg_rax) {
     BUILD(Opcode::Mov).base_disp(Register::rbp, 0).reg(Register::rax);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -212,7 +212,7 @@ TEST(x86EncoderTest, Mov64Base32Disp8Reg32) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Base32Disp8Reg64) {
+TEST(x86EncoderTest, Mov64Base_rbpDisp8Reg_r10) {
     BUILD(Opcode::Mov).base_disp(Register::rbp, 0).reg(Register::r10);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -222,7 +222,7 @@ TEST(x86EncoderTest, Mov64Base32Disp8Reg64) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Base64Disp8Reg32) {
+TEST(x86EncoderTest, Mov64Base_r11Disp8Reg_rax) {
     BUILD(Opcode::Mov).base_disp(Register::r11, 0).reg(Register::rax);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -232,7 +232,7 @@ TEST(x86EncoderTest, Mov64Base64Disp8Reg32) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Base64Disp8Reg64) {
+TEST(x86EncoderTest, Mov64Base_r11Disp8Reg_r10) {
     BUILD(Opcode::Mov).base_disp(Register::r11, 0).reg(Register::r10);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -242,7 +242,7 @@ TEST(x86EncoderTest, Mov64Base64Disp8Reg64) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Reg32Base32Disp8) {
+TEST(x86EncoderTest, Mov64Reg_raxBase_rbpDisp8) {
     BUILD(Opcode::Mov).reg(Register::rax).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -252,7 +252,7 @@ TEST(x86EncoderTest, Mov64Reg32Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Reg32Base64Disp8) {
+TEST(x86EncoderTest, Mov64Reg_raxBase_r11Disp8) {
     BUILD(Opcode::Mov).reg(Register::rax).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -262,7 +262,7 @@ TEST(x86EncoderTest, Mov64Reg32Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Reg64Base32Disp8) {
+TEST(x86EncoderTest, Mov64Reg_r10Base_rbpDisp8) {
     BUILD(Opcode::Mov).reg(Register::r10).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -272,7 +272,7 @@ TEST(x86EncoderTest, Mov64Reg64Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Reg64Base64Disp8) {
+TEST(x86EncoderTest, Mov64Reg_r10Base_r11Disp8) {
     BUILD(Opcode::Mov).reg(Register::r10).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -282,7 +282,7 @@ TEST(x86EncoderTest, Mov64Reg64Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Mov64Reg32Reg32) {
+TEST(x86EncoderTest, Mov64Reg_raxReg_rbx) {
     BUILD(Opcode::Mov).reg(Register::rax).reg(Register::rbx);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
@@ -291,7 +291,7 @@ TEST(x86EncoderTest, Mov64Reg32Reg32) {
     EXPECT_EQ(encoded[2], 0xd8); // modrm(0b11, rbx=3, rax=0)
 }
 
-TEST(x86EncoderTest, Mov64Reg64Reg64) {
+TEST(x86EncoderTest, Mov64Reg_r11Reg_r12) {
     BUILD(Opcode::Mov).reg(Register::r11).reg(Register::r12);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
@@ -300,14 +300,14 @@ TEST(x86EncoderTest, Mov64Reg64Reg64) {
     EXPECT_EQ(encoded[2], 0xe3); // modrm(0b11, r12=4, r11=3)
 }
 
-TEST(x86EncoderTest, PopReg32) {
+TEST(x86EncoderTest, PopReg_rbx) {
     BUILD(Opcode::Pop).reg(Register::rbx);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 1);
     EXPECT_EQ(encoded[0], 0x5b); // pop r64 = 58 + rbx=3
 }
 
-TEST(x86EncoderTest, PopReg64) {
+TEST(x86EncoderTest, PopReg_r11) {
     BUILD(Opcode::Pop).reg(Register::r11);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 2);
@@ -315,14 +315,14 @@ TEST(x86EncoderTest, PopReg64) {
     EXPECT_EQ(encoded[1], 0x5b); // pop r64 = 58 + r11=3
 }
 
-TEST(x86EncoderTest, PushReg32) {
+TEST(x86EncoderTest, PushReg_rbx) {
     BUILD(Opcode::Push).reg(Register::rbx);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 1);
     EXPECT_EQ(encoded[0], 0x53); // push r64 = 50 + rbx=3
 }
 
-TEST(x86EncoderTest, PushReg64) {
+TEST(x86EncoderTest, PushReg_r11) {
     BUILD(Opcode::Push).reg(Register::r11);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 2);
@@ -390,7 +390,7 @@ INSTANTIATE_TEST_SUITE_P(x86EncoderTest, Setcc,
                                          std::pair<Opcode, std::uint8_t>(Opcode::Setle, 0x9e),
                                          std::pair<Opcode, std::uint8_t>(Opcode::Setge, 0x9d)));
 
-TEST(x86EncoderTest, Sub64Reg32Base32Disp8) {
+TEST(x86EncoderTest, Sub64Reg_raxBase_rbpDisp8) {
     BUILD(Opcode::Sub).reg(Register::rax).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -400,7 +400,7 @@ TEST(x86EncoderTest, Sub64Reg32Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg32Base64Disp8) {
+TEST(x86EncoderTest, Sub64Reg_raxBase_r11Disp8) {
     BUILD(Opcode::Sub).reg(Register::rax).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -410,7 +410,7 @@ TEST(x86EncoderTest, Sub64Reg32Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg64Base32Disp8) {
+TEST(x86EncoderTest, Sub64Reg_r10Base_rbpDisp8) {
     BUILD(Opcode::Sub).reg(Register::r10).base_disp(Register::rbp, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -420,7 +420,7 @@ TEST(x86EncoderTest, Sub64Reg64Base32Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg64Base64Disp8) {
+TEST(x86EncoderTest, Sub64Reg_r10Base_r11Disp8) {
     BUILD(Opcode::Sub).reg(Register::r10).base_disp(Register::r11, 0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -430,7 +430,7 @@ TEST(x86EncoderTest, Sub64Reg64Base64Disp8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg32Imm8) {
+TEST(x86EncoderTest, Sub64Reg_rbxImm8) {
     BUILD(Opcode::Sub).reg(Register::rbx).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -440,7 +440,7 @@ TEST(x86EncoderTest, Sub64Reg32Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg64Imm8) {
+TEST(x86EncoderTest, Sub64Reg_r11Imm8) {
     BUILD(Opcode::Sub).reg(Register::r11).imm(0);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 4);
@@ -450,7 +450,7 @@ TEST(x86EncoderTest, Sub64Reg64Imm8) {
     EXPECT_EQ(encoded[3], 0x00);
 }
 
-TEST(x86EncoderTest, Sub64Reg32Reg32) {
+TEST(x86EncoderTest, Sub64Reg_raxReg_rbx) {
     BUILD(Opcode::Sub).reg(Register::rax).reg(Register::rbx);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
@@ -459,7 +459,7 @@ TEST(x86EncoderTest, Sub64Reg32Reg32) {
     EXPECT_EQ(encoded[2], 0xd8); // modrm(0b11, rbx=3, rax=0)
 }
 
-TEST(x86EncoderTest, Sub64Reg64Reg64) {
+TEST(x86EncoderTest, Sub64Reg_r11Reg_r12) {
     BUILD(Opcode::Sub).reg(Register::r11).reg(Register::r12);
     auto [encoded, length] = encode(inst);
     EXPECT_EQ(length, 3);
