@@ -8,6 +8,7 @@
 #include <coel/ir/Dumper.hh>
 #include <coel/ir/Function.hh>
 #include <coel/ir/Instructions.hh>
+#include <coel/ir/Types.hh>
 #include <coel/ir/Unit.hh>
 #include <coel/support/Assert.hh>
 #include <coel/x86/Backend.hh>
@@ -23,26 +24,30 @@ using namespace coel;
 int main() {
     ir::Unit unit;
 
-    auto *main = unit.append_function("main", 0);
-    auto *callee = unit.append_function("foo", 2);
+    std::array<const ir::Type *, 2> callee_params{ir::IntegerType::get(32), ir::IntegerType::get(32)};
+    auto *main = unit.append_function("main", ir::IntegerType::get(32), {});
+    auto *callee = unit.append_function("foo", ir::IntegerType::get(32), callee_params);
 
     auto *main_entry = main->append_block();
-    auto *var1 = main->append_stack_slot();
-    auto *var2 = main->append_stack_slot();
-    main_entry->append<ir::StoreInst>(var1, ir::Constant::get(10));
+    auto *var1 = main->append_stack_slot(ir::IntegerType::get(32));
+    auto *var2 = main->append_stack_slot(ir::IntegerType::get(32));
+    main_entry->append<ir::StoreInst>(var1, ir::Constant::get(ir::IntegerType::get(32), 10));
     main_entry->append<ir::StoreInst>(var2, main_entry->append<ir::LoadInst>(var1));
     auto *call = main_entry->append<ir::CallInst>(
-        callee, std::vector<ir::Value *>{main_entry->append<ir::LoadInst>(var2), ir::Constant::get(20)});
+        callee, std::vector<ir::Value *>{main_entry->append<ir::LoadInst>(var2),
+                                         ir::Constant::get(ir::IntegerType::get(32), 20)});
     main_entry->append<ir::RetInst>(call);
 
     auto *callee_entry = callee->append_block();
     auto *true_dst = callee->append_block();
     auto *false_dst = callee->append_block();
-    auto *add1 = callee_entry->append<ir::BinaryInst>(ir::BinaryOp::Add, ir::Constant::get(5), callee->argument(0));
-    callee_entry->append<ir::CondBranchInst>(ir::Constant::get(1), true_dst, false_dst);
+    auto *add1 = callee_entry->append<ir::BinaryInst>(ir::BinaryOp::Add, ir::Constant::get(ir::IntegerType::get(32), 5),
+                                                      callee->argument(0));
+    callee_entry->append<ir::CondBranchInst>(ir::Constant::get(ir::BoolType::get(), 1), true_dst, false_dst);
     auto *true_add = true_dst->append<ir::BinaryInst>(ir::BinaryOp::Add, add1, callee->argument(1));
     true_dst->append<ir::RetInst>(true_add);
-    auto *false_add = false_dst->append<ir::BinaryInst>(ir::BinaryOp::Add, add1, ir::Constant::get(40));
+    auto *false_add =
+        false_dst->append<ir::BinaryInst>(ir::BinaryOp::Add, add1, ir::Constant::get(ir::IntegerType::get(32), 40));
     false_dst->append<ir::RetInst>(false_add);
 
     fmt::print("=====\n");

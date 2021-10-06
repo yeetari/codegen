@@ -8,6 +8,7 @@
 #include <coel/support/ListNode.hh>
 
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -20,14 +21,13 @@ class Function final : public Value, public ListNode {
     List<StackSlot> m_stack_slots;
 
 public:
-    Function(std::string &&name, std::size_t argument_count)
-        : Value(ValueKind::Function), m_name(std::move(name)), m_arguments(argument_count) {}
+    Function(std::string &&name, const Type *return_type, std::span<const Type *> parameters);
 
     auto begin() const { return m_blocks.begin(); }
     auto end() const { return m_blocks.end(); }
 
     BasicBlock *append_block();
-    StackSlot *append_stack_slot();
+    StackSlot *append_stack_slot(const Type *type);
     Argument *argument(std::size_t index) { return &m_arguments[index]; }
     const Argument *argument(std::size_t index) const { return &m_arguments[index]; }
 

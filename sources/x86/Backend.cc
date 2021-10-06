@@ -6,6 +6,7 @@
 #include <coel/ir/Function.hh>
 #include <coel/ir/InstVisitor.hh>
 #include <coel/ir/Instructions.hh>
+#include <coel/ir/Types.hh>
 #include <coel/ir/Unit.hh>
 #include <coel/support/Assert.hh>
 #include <coel/x86/Builder.hh>
@@ -24,6 +25,7 @@ class Compiler final : public ir::InstVisitor {
 
     Builder emit(Opcode opcode);
     void emit_rhs(Builder inst, ir::Value *rhs);
+    std::uint8_t type_width(const ir::Type *type);
 
 public:
     void run(const ir::Function *function);
@@ -48,28 +50,44 @@ Builder Compiler::emit(Opcode opcode) {
 
 void Compiler::emit_rhs(Builder inst, ir::Value *rhs) {
     if (auto *reg = rhs->as<codegen::Register>()) {
+        COEL_ASSERT(inst.operand_width() == type_width(reg->type()));
         inst.reg(static_cast<Register>(reg->reg()));
     } else if (auto *constant = rhs->as<ir::Constant>()) {
-        inst.imm(constant->value());
+        inst.imm(constant->value()).width(type_width(constant->type()));
     } else if (auto *load = rhs->as<ir::LoadInst>()) {
         const auto *stack_slot = load->ptr()->as_non_null<ir::StackSlot>();
         inst.base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
+        inst.width(type_width(load->type()));
     } else {
         COEL_ENSURE_NOT_REACHED();
     }
+}
+
+std::uint8_t Compiler::type_width(const ir::Type *type) {
+    if (const auto *bool_type = type->as<ir::BoolType>()) {
+        return 16;
+    }
+    if (const auto *integer_type = type->as<ir::IntegerType>()) {
+        return integer_type->bit_width();
+    }
+    COEL_ENSURE_NOT_REACHED();
 }
 
 void Compiler::run(const ir::Function *function) {
     m_function = function;
     emit(Opcode::Lbl).lbl(function);
     if (!function->stack_slots().empty()) {
+        std::size_t frame_size = 0;
         for (std::int32_t offset = 0; const auto *stack_slot : function->stack_slots()) {
-            offset -= 8;
+            const std::uint8_t size =
+                type_width(stack_slot->type()->as_non_null<ir::PointerType>()->pointee_type()) / 8;
+            frame_size += size;
+            offset -= size;
             m_stack_offsets.emplace(stack_slot, offset);
         }
-        emit(Opcode::Push).reg(Register::rbp);
-        emit(Opcode::Mov).reg(Register::rbp).reg(Register::rsp);
-        emit(Opcode::Sub).reg(Register::rsp).imm(function->stack_slots().size() * 8);
+        emit(Opcode::Push).reg(Register::rbp).width(64);
+        emit(Opcode::Mov).reg(Register::rbp).reg(Register::rsp).width(64);
+        emit(Opcode::Sub).reg(Register::rsp).imm(frame_size).width(64);
     }
     for (auto *block : *function) {
         emit(Opcode::Lbl).lbl(block);
@@ -90,7 +108,7 @@ void Compiler::visit(ir::BinaryInst *binary) {
     };
     const auto *lhs = binary->lhs()->as_non_null<codegen::Register>();
     COEL_ASSERT(lhs->physical());
-    auto inst = emit(opcode(binary->op())).reg(static_cast<Register>(lhs->reg()));
+    auto inst = emit(opcode(binary->op())).reg(static_cast<Register>(lhs->reg())).width(type_width(binary->type()));
     emit_rhs(inst, binary->rhs());
 }
 
@@ -105,7 +123,7 @@ void Compiler::visit(ir::CallInst *call) {
 void Compiler::visit(ir::CompareInst *compare) {
     const auto *lhs = compare->lhs()->as_non_null<codegen::Register>();
     COEL_ASSERT(lhs->physical());
-    auto cmp = emit(Opcode::Cmp).reg(static_cast<Register>(lhs->reg()));
+    auto cmp = emit(Opcode::Cmp).reg(static_cast<Register>(lhs->reg())).width(type_width(lhs->type()));
     emit_rhs(cmp, compare->rhs());
     auto opcode = [](ir::CompareOp op) -> Opcode {
         switch (op) {
@@ -123,20 +141,20 @@ void Compiler::visit(ir::CompareInst *compare) {
             return Opcode::Setge;
         }
     };
-    emit(opcode(compare->op())).reg(static_cast<Register>(lhs->reg()));
+    emit(opcode(compare->op())).reg(static_cast<Register>(lhs->reg())).width(8);
 }
 
 void Compiler::visit(ir::CondBranchInst *cond_branch) {
     const auto *cond = cond_branch->cond()->as_non_null<codegen::Register>();
     COEL_ASSERT(cond->physical());
-    emit(Opcode::Cmp).reg(static_cast<Register>(cond->reg())).imm(1);
+    emit(Opcode::Cmp).reg(static_cast<Register>(cond->reg())).imm(1).width(type_width(cond->type()));
     emit(Opcode::JeLbl).lbl(cond_branch->true_dst());
     emit(Opcode::JmpLbl).lbl(cond_branch->false_dst());
 }
 
 void Compiler::visit(ir::CopyInst *copy) {
     COEL_ASSERT(copy->dst()->physical());
-    auto inst = emit(Opcode::Mov).reg(static_cast<Register>(copy->dst()->reg()));
+    auto inst = emit(Opcode::Mov).reg(static_cast<Register>(copy->dst()->reg())).width(type_width(copy->dst()->type()));
     emit_rhs(inst, copy->src());
 }
 
@@ -149,7 +167,9 @@ void Compiler::visit(ir::RetInst *) {
 
 void Compiler::visit(ir::StoreInst *store) {
     const auto *stack_slot = store->ptr()->as_non_null<ir::StackSlot>();
-    auto inst = emit(Opcode::Mov).base_disp(Register::rbp, m_stack_offsets.at(stack_slot));
+    auto inst = emit(Opcode::Mov)
+                    .base_disp(Register::rbp, m_stack_offsets.at(stack_slot))
+                    .width(type_width(stack_slot->type()->as_non_null<ir::PointerType>()->pointee_type()));
     emit_rhs(inst, store->value());
 }
 

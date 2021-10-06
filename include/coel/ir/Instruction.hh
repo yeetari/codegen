@@ -23,9 +23,10 @@ class Instruction : public Value, public ListNode {
     const Opcode m_opcode;
 
 protected:
-    explicit Instruction(Opcode opcode) : Value(ValueKind::Instruction), m_opcode(opcode) {}
+    Instruction(Opcode opcode, const Type *type) : Value(ValueKind::Instruction, type), m_opcode(opcode) {}
 
 public:
+    // TODO: Maybe declare the implementations of this inline in the header?
     virtual void accept(InstVisitor *visitor) = 0;
     virtual bool is_terminator() const = 0;
 

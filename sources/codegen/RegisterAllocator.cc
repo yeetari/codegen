@@ -106,7 +106,7 @@ void RegisterAllocator::run(ir::Function *function) {
     std::array argument_registers{7, 6, 2, 1, 8, 9};
     for (std::size_t i = 0; i < function->arguments().size(); i++) {
         auto *argument = function->argument(i);
-        argument->replace_all_uses_with(m_context.create_physical(argument_registers[i]));
+        argument->replace_all_uses_with(m_context.create_physical(argument->type(), argument_registers[i]));
         m_matrix[argument_registers[i]] = argument;
     }
 

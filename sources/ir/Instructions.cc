@@ -2,12 +2,13 @@
 
 #include <coel/ir/BasicBlock.hh>
 #include <coel/ir/InstVisitor.hh>
+#include <coel/ir/Types.hh>
 #include <coel/support/Assert.hh>
 
 namespace coel::ir {
 
 BinaryInst::BinaryInst(BinaryOp op, Value *lhs, Value *rhs)
-    : Instruction(Opcode::Binary), m_op(op), m_lhs(lhs), m_rhs(rhs) {
+    : Instruction(Opcode::Binary, lhs->type()), m_op(op), m_lhs(lhs), m_rhs(rhs) {
     lhs->add_user(this);
     rhs->add_user(this);
 }
@@ -49,7 +50,7 @@ void BinaryInst::set_lhs(Value *lhs) {
     m_lhs->add_user(this);
 }
 
-BranchInst::BranchInst(BasicBlock *dst) : Instruction(Opcode::Branch), m_dst(dst) {
+BranchInst::BranchInst(BasicBlock *dst) : Instruction(Opcode::Branch, nullptr), m_dst(dst) {
     dst->add_user(this);
 }
 
@@ -74,7 +75,7 @@ void BranchInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 CallInst::CallInst(Value *callee, std::vector<Value *> &&args)
-    : Instruction(Opcode::Call), m_callee(callee), m_args(std::move(args)) {
+    : Instruction(Opcode::Call, callee->type()), m_callee(callee), m_args(std::move(args)) {
     callee->add_user(this);
     for (auto *arg : m_args) {
         arg->add_user(this);
@@ -116,7 +117,7 @@ void CallInst::replace_uses_of_with(Value *orig, Value *repl) {
 }
 
 CompareInst::CompareInst(CompareOp op, Value *lhs, Value *rhs)
-    : Instruction(Opcode::Compare), m_op(op), m_lhs(lhs), m_rhs(rhs) {
+    : Instruction(Opcode::Compare, BoolType::get()), m_op(op), m_lhs(lhs), m_rhs(rhs) {
     lhs->add_user(this);
     rhs->add_user(this);
 }
@@ -159,7 +160,7 @@ void CompareInst::set_lhs(Value *lhs) {
 }
 
 CondBranchInst::CondBranchInst(Value *cond, BasicBlock *true_dst, BasicBlock *false_dst)
-    : Instruction(Opcode::CondBranch), m_cond(cond), m_true_dst(true_dst), m_false_dst(false_dst) {
+    : Instruction(Opcode::CondBranch, nullptr), m_cond(cond), m_true_dst(true_dst), m_false_dst(false_dst) {
     cond->add_user(this);
     true_dst->add_user(this);
     false_dst->add_user(this);
@@ -196,7 +197,7 @@ void CondBranchInst::set_cond(Value *cond) {
     m_cond->add_user(this);
 }
 
-CopyInst::CopyInst(codegen::Register *dst, Value *src) : Instruction(Opcode::Copy), m_dst(dst), m_src(src) {
+CopyInst::CopyInst(codegen::Register *dst, Value *src) : Instruction(Opcode::Copy, nullptr), m_dst(dst), m_src(src) {
     src->add_user(this);
 }
 
@@ -221,7 +222,8 @@ void CopyInst::replace_uses_of_with(Value *orig, Value *repl) {
     }
 }
 
-LoadInst::LoadInst(Value *ptr) : Instruction(Opcode::Load), m_ptr(ptr) {
+LoadInst::LoadInst(Value *ptr)
+    : Instruction(Opcode::Load, ptr->type()->as_non_null<PointerType>()->pointee_type()), m_ptr(ptr) {
     ptr->add_user(this);
 }
 
@@ -245,7 +247,7 @@ void LoadInst::replace_uses_of_with(Value *orig, Value *repl) {
     }
 }
 
-RetInst::RetInst(Value *value) : Instruction(Opcode::Ret), m_value(value) {
+RetInst::RetInst(Value *value) : Instruction(Opcode::Ret, nullptr), m_value(value) {
     value->add_user(this);
 }
 
@@ -276,7 +278,7 @@ void RetInst::set_value(Value *value) {
     m_value->add_user(this);
 }
 
-StoreInst::StoreInst(Value *ptr, Value *value) : Instruction(Opcode::Store), m_ptr(ptr), m_value(value) {
+StoreInst::StoreInst(Value *ptr, Value *value) : Instruction(Opcode::Store, nullptr), m_ptr(ptr), m_value(value) {
     ptr->add_user(this);
     value->add_user(this);
 }

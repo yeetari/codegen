@@ -7,6 +7,8 @@ target_sources(coel PRIVATE
     ir/Dumper.cc
     ir/Function.cc
     ir/Instructions.cc
+    ir/StackSlot.cc
+    ir/Types.cc
     ir/Unit.cc
     ir/Value.cc
     support/Assert.cc

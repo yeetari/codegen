@@ -38,4 +38,13 @@ Builder Builder::reg(Register op) {
     return *this;
 }
 
+Builder Builder::width(std::uint8_t operand_width) {
+    m_inst->operand_width = operand_width;
+    return *this;
+}
+
+std::uint8_t Builder::operand_width() const {
+    return m_inst->operand_width;
+}
+
 } // namespace coel::x86

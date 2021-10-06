@@ -7,7 +7,7 @@ namespace coel::ir {
 
 class StackSlot : public Value, public ListNode {
 public:
-    StackSlot() : Value(ValueKind::StackSlot) {}
+    explicit StackSlot(const Type *type);
 };
 
 } // namespace coel::ir

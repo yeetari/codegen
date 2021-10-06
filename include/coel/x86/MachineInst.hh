@@ -60,6 +60,7 @@ struct Operand {
 struct MachineInst {
     Opcode opcode;
     std::array<Operand, 4> operands;
+    std::uint8_t operand_width;
 };
 
 std::uint8_t encode(const MachineInst &inst, std::span<std::uint8_t, 16> encoded);

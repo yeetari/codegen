@@ -6,6 +6,8 @@
 
 namespace coel::ir {
 
+class Type;
+
 enum class ValueKind {
     Argument,
     BasicBlock,
@@ -18,16 +20,18 @@ enum class ValueKind {
 
 // TODO: Constants and Registers shouldn't have a users vector; create a separate Usable class that
 //       BasicBlock/Instruction inherit from.
+// TODO: Not every Value has a type.
 class Value {
     const ValueKind m_kind;
+    const Type *const m_type;
     std::unordered_set<Value *> m_users;
 
 protected:
-    explicit Value(ValueKind kind) : m_kind(kind) {}
+    Value(ValueKind kind, const Type *type) : m_kind(kind), m_type(type) {}
 
 public:
     Value(const Value &) = delete;
-    Value(Value &&) = delete;
+    Value(Value &&other) noexcept : m_kind(other.m_kind), m_type(other.m_type), m_users(std::move(other.m_users)) {}
     virtual ~Value();
 
     Value &operator=(const Value &) = delete;
@@ -62,6 +66,7 @@ public:
     }
 
     ValueKind kind() const { return m_kind; }
+    const Type *type() const { return m_type; }
 };
 
 } // namespace coel::ir

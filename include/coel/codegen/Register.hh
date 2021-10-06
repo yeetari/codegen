@@ -11,8 +11,8 @@ class Register : public ir::Value {
     std::size_t m_value;
 
 public:
-    Register(std::size_t reg, bool physical)
-        : ir::Value(ir::ValueKind::Register), m_value(reg | (physical ? k_physical_bit : 0)) {}
+    Register(const ir::Type *type, std::size_t reg, bool physical)
+        : ir::Value(ir::ValueKind::Register, type), m_value(reg | (physical ? k_physical_bit : 0)) {}
 
     void set_reg(std::size_t reg) { m_value = reg | (physical() ? k_physical_bit : 0); }
     void set_physical(bool physical) { m_value ^= (-physical ^ m_value) & k_physical_bit; }

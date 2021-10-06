@@ -16,7 +16,7 @@ public:
     auto begin() const { return m_functions.begin(); }
     auto end() const { return m_functions.end(); }
 
-    Function *append_function(std::string name, std::size_t argument_count);
+    Function *append_function(std::string name, const Type *return_type, std::span<const Type *> parameters);
     Function *find_function(std::string_view name);
 };
 

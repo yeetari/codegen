@@ -20,6 +20,9 @@ public:
     Builder lbl(const void *op);
     Builder off(std::int64_t op);
     Builder reg(Register op);
+    Builder width(std::uint8_t operand_width);
+
+    std::uint8_t operand_width() const;
 };
 
 } // namespace coel::x86

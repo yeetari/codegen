@@ -22,8 +22,12 @@ class Context {
 public:
     explicit Context(ir::Unit &unit) : m_unit(&unit) {}
 
-    Register *create_physical(std::size_t phys) { return m_registers.emplace_back(new Register(phys, true)).get(); }
-    Register *create_virtual() { return m_registers.emplace_back(new Register(m_virtual_count++, false)).get(); }
+    Register *create_physical(const ir::Type *type, std::size_t phys) {
+        return m_registers.emplace_back(new Register(type, phys, true)).get();
+    }
+    Register *create_virtual(const ir::Type *type) {
+        return m_registers.emplace_back(new Register(type, m_virtual_count++, false)).get();
+    }
 
     ir::Unit &unit() const { return *m_unit; }
 };

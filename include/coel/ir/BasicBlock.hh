@@ -17,7 +17,7 @@ class BasicBlock final : public Value, public ListNode {
     List<Instruction> m_instructions;
 
 public:
-    BasicBlock() : Value(ValueKind::BasicBlock) {}
+    BasicBlock() : Value(ValueKind::BasicBlock, nullptr) {}
     BasicBlock(const BasicBlock &) = delete;
     BasicBlock(BasicBlock &&) = delete;
     ~BasicBlock() override;

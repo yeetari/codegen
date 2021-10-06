@@ -5,6 +5,7 @@
 #include <coel/ir/Function.hh>
 #include <coel/ir/InstVisitor.hh>
 #include <coel/ir/Instructions.hh>
+#include <coel/ir/Types.hh>
 #include <coel/ir/Unit.hh>
 #include <coel/support/Assert.hh>
 
@@ -40,6 +41,19 @@ public:
     void visit(StoreInst *) override;
 };
 
+std::string type_string(const Type *type) {
+    if (type->is<BoolType>()) {
+        return "bool";
+    }
+    if (const auto *integer_type = type->as<IntegerType>()) {
+        return fmt::format("u{}", integer_type->bit_width());
+    }
+    if (const auto *pointer_type = type->as<PointerType>()) {
+        return fmt::format("{}*", type_string(pointer_type->pointee_type()));
+    }
+    COEL_ENSURE_NOT_REACHED();
+}
+
 std::string Dumper::value_string(Value *value) {
     if (auto *argument = value->as<Argument>()) {
         auto it = std::find_if(m_function->arguments().begin(), m_function->arguments().end(),
@@ -47,7 +61,7 @@ std::string Dumper::value_string(Value *value) {
                                    return &arg == argument;
                                });
         auto index = std::distance(m_function->arguments().begin(), it);
-        return fmt::format("%a{}", index);
+        return fmt::format("{} %a{}", type_string(argument->type()), index);
     }
     if (auto *block = value->as<BasicBlock>()) {
         if (!m_block_map.contains(block)) {
@@ -56,24 +70,18 @@ std::string Dumper::value_string(Value *value) {
         return fmt::format("L{}", m_block_map.at(block));
     }
     if (auto *constant = value->as<Constant>()) {
-        return std::to_string(constant->value());
+        return fmt::format("{} {}", type_string(constant->type()), constant->value());
     }
     if (auto *function = value->as<Function>()) {
-        return fmt::format("@{}", function->name());
+        return fmt::format("{} @{}", type_string(function->type()), function->name());
     }
     if (auto *reg = value->as<codegen::Register>()) {
         return fmt::format("{}({})", reg->physical() ? "phys" : "virt", reg->reg());
     }
     if (auto *stack_slot = value->as<StackSlot>()) {
-        if (!m_stack_map.contains(stack_slot)) {
-            m_stack_map.emplace(stack_slot, m_stack_map.size());
-        }
-        return fmt::format("%s{}", m_stack_map.at(stack_slot));
+        return fmt::format("{} %s{}", type_string(stack_slot->type()), m_stack_map.at(stack_slot));
     }
-    if (!m_value_map.contains(value)) {
-        m_value_map.emplace(value, m_value_map.size());
-    }
-    return fmt::format("%v{}", m_value_map.at(value));
+    return fmt::format("{} %v{}", type_string(value->type()), m_value_map.at(value));
 }
 
 void Dumper::dump(BasicBlock &block) {
@@ -81,7 +89,9 @@ void Dumper::dump(BasicBlock &block) {
     for (auto *inst : block) {
         fmt::print("    ");
         if (!inst->is_terminator() && !inst->is<CopyInst>() && !inst->is<StoreInst>()) {
-            fmt::print("{} = ", value_string(inst));
+            COEL_ASSERT(!m_value_map.contains(inst));
+            fmt::print("%v{} = ", m_value_map.size());
+            m_value_map.emplace(inst, m_value_map.size());
         }
         inst->accept(this);
         fmt::print("\n");
@@ -91,7 +101,9 @@ void Dumper::dump(BasicBlock &block) {
 
 void Dumper::dump_stack_slots() {
     for (auto *stack_slot : m_function->stack_slots()) {
-        fmt::print("  {}: i32\n", value_string(stack_slot));
+        fmt::print("  %s{}: {}\n", m_stack_map.size(),
+                   type_string(stack_slot->type()->as_non_null<PointerType>()->pointee_type()));
+        m_stack_map.emplace(stack_slot, m_stack_map.size());
     }
 }
 
@@ -176,7 +188,7 @@ void dump(Unit &unit) {
             if (i != 0) {
                 fmt::print(", ");
             }
-            fmt::print("%a{}", i);
+            fmt::print("%a{}: {}", i, type_string(function->argument(i)->type()));
         }
         fmt::print(") {{\n");
         dumper.dump_stack_slots();

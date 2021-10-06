@@ -13,99 +13,72 @@ std::uint8_t emit_mod_rm(std::uint8_t mod, std::uint8_t reg, std::uint8_t rm) {
 }
 
 std::uint8_t encode_arith(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operand_width == 16 || inst.operand_width == 32 || inst.operand_width == 64);
     COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
     auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
-    std::uint8_t rex = 0x48; // REX.W
+    std::uint8_t length = 0;
+    std::uint8_t rex = 0x40;
+    if (inst.operand_width == 16) {
+        encoded[length++] = 0x66; // operand size override
+    } else if (inst.operand_width == 64) {
+        rex |= (1u << 3u); // REX.W
+    }
     if (lhs >= 8) {
         rex |= (1u << 0u); // REX.B
     }
     switch (inst.operands[1].type) {
     case OperandType::BaseDisp: {
-        rex = 0x48;
-        if (lhs >= 8) {
+        if ((rex & (1u << 0u)) != 0) {
+            rex &= ~(1u << 0u);
             rex |= (1u << 2u); // REX.R
         }
         auto base = static_cast<std::uint8_t>(inst.operands[1].base);
         if (base >= 8) {
             rex |= (1u << 0u); // REX.B
         }
-        encoded[0] = rex;
-        if (inst.opcode == Opcode::Add) {
-            encoded[1] = 0x03; // add reg, r/m
-        } else {
-            encoded[1] = 0x2b; // sub reg, r/m
+        if (rex != 0x40) {
+            encoded[length++] = rex;
         }
-        encoded[2] = emit_mod_rm(0b01, lhs, base);
-        encoded[3] = inst.operands[1].disp;
-        return 4;
+        if (inst.opcode == Opcode::Add) {
+            encoded[length++] = 0x03; // add reg, r/m
+        } else if (inst.opcode == Opcode::Sub) {
+            encoded[length++] = 0x2b; // sub reg, r/m
+        } else {
+            encoded[length++] = 0x3b; // cmp reg, r/m
+        }
+        encoded[length++] = emit_mod_rm(0b01, lhs, base);
+        encoded[length++] = inst.operands[1].disp;
+        return length;
     }
     case OperandType::Imm: {
-        // TODO: Emit special encoding for add/sub (al, ax, eax, rax), imm(8, 16, 32, 32).
+        // TODO: Emit special encoding for opcode (al, ax, eax, rax), imm(8, 16, 32, 32).
         auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
         COEL_ASSERT(rhs <= 0x7f);
-        encoded[0] = rex;
-        encoded[1] = 0x83; // add/sub r/m, imm8
-        encoded[2] = emit_mod_rm(0b11, inst.opcode == Opcode::Sub ? 5 : 0, lhs);
-        encoded[3] = rhs;
-        return 4;
+        if (rex != 0x40) {
+            encoded[length++] = rex;
+        }
+        encoded[length++] = 0x83; // opcode r/m, imm8
+        encoded[length++] = emit_mod_rm(0b11, inst.opcode == Opcode::Cmp ? 7 : inst.opcode == Opcode::Sub ? 5 : 0, lhs);
+        encoded[length++] = rhs;
+        return length;
     }
     case OperandType::Reg: {
         auto rhs = static_cast<std::uint8_t>(inst.operands[1].reg);
         if (rhs >= 8) {
             rex |= (1u << 2u); // REX.R
         }
-        encoded[0] = rex;
+        if (rex != 0x40) {
+            encoded[length++] = rex;
+        }
         if (inst.opcode == Opcode::Add) {
-            encoded[1] = 0x01; // add r/m, reg
+            encoded[length++] = 0x01; // add r/m, reg
+        } else if (inst.opcode == Opcode::Sub) {
+            encoded[length++] = 0x29; // sub r/m, reg
         } else {
-            encoded[1] = 0x29; // sub r/m, reg
+            encoded[length++] = 0x39; // cmp r/m, reg
         }
-        encoded[2] = emit_mod_rm(0b11, rhs, lhs);
-        return 3;
-    }
-    default:
-        COEL_ENSURE_NOT_REACHED();
-    }
-}
-
-std::uint8_t encode_cmp(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
-    // TODO: Emit special encoding for cmp (al, ax, eax, rax), imm(8, 16, 32, 64).
-    COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
-    auto lhs = static_cast<std::uint8_t>(inst.operands[0].reg);
-    if (lhs >= 8) {
-        encoded[0] = 0x49; // REX.W + REX.B
-    } else {
-        encoded[0] = 0x48; // REX.W
-    }
-    switch (inst.operands[1].type) {
-    case OperandType::BaseDisp: {
-        auto base = static_cast<std::uint8_t>(inst.operands[1].base);
-        std::uint8_t rex = 0x48;
-        if (lhs >= 8) {
-            rex |= (1u << 2u); // REX.R
-        }
-        if (base >= 8) {
-            rex |= (1u << 0u); // REX.B
-        }
-        encoded[0] = rex;
-        encoded[1] = 0x3b; // cmp reg, r/m
-        encoded[2] = emit_mod_rm(0b01, lhs, base);
-        encoded[3] = inst.operands[1].disp;
-        return 4;
-    }
-    case OperandType::Imm: {
-        auto rhs = static_cast<std::uint8_t>(inst.operands[1].imm & 0xffu);
-        COEL_ASSERT(rhs <= 0x7f);
-        encoded[1] = 0x83; // cmp r/m, imm8
-        encoded[2] = emit_mod_rm(0b11, 7, lhs);
-        encoded[3] = rhs;
-        return 4;
-    }
-    case OperandType::Reg: {
-        auto rhs = static_cast<std::uint8_t>(inst.operands[1].reg);
-        encoded[1] = 0x39; // cmp r/m, reg
-        encoded[2] = emit_mod_rm(0b11, rhs, lhs);
-        return 3;
+        encoded[length++] = emit_mod_rm(0b11, rhs, lhs);
+        return length;
     }
     default:
         COEL_ENSURE_NOT_REACHED();
@@ -118,6 +91,7 @@ std::uint8_t encode_leave(const MachineInst &, std::span<std::uint8_t, 16> encod
 }
 
 std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operand_width == 16 || inst.operand_width == 32 || inst.operand_width == 64);
     std::uint8_t mod = 0;
     std::uint8_t dst = 0;
     switch (inst.operands[0].type) {
@@ -137,6 +111,11 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 
     std::uint8_t length = 0;
     std::uint8_t rex = 0x40;
+    if (inst.operand_width == 16) {
+        encoded[length++] = 0x66; // operand size override
+    } else if (inst.operand_width == 64) {
+        rex |= (1u << 3u); // REX.W
+    }
     if (dst >= 8) {
         rex |= (1u << 0u); // REX.B
     }
@@ -147,22 +126,24 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
                inst.operands[1].disp < std::numeric_limits<std::int8_t>::max());
         bool need_sib = inst.operands[1].base == Register::rsp || inst.operands[1].base == Register::r12;
         COEL_ASSERT(!need_sib); // TODO: Support rsp and r12.
-        if (rex != 0x40) {
-            rex = 0x40u | (1u << 2u);
+        if ((rex & (1u << 0u)) != 0) {
+            rex &= ~(1u << 0u);
+            rex |= (1u << 2u); // REX.R
         }
         auto base = static_cast<std::uint8_t>(inst.operands[1].base);
         if (base >= 8) {
             rex |= (1u << 0u); // REX.B
         }
-        rex |= (1u << 3u); // REX.W
-        encoded[0] = rex;
-        encoded[1] = 0x8b; // mov reg, r/m
-        encoded[2] = emit_mod_rm(0b01, dst, base);
-        encoded[3] = inst.operands[1].disp;
-        return 4;
+        if (rex != 0x40) {
+            encoded[length++] = rex;
+        }
+        encoded[length++] = 0x8b; // mov reg, r/m
+        encoded[length++] = emit_mod_rm(0b01, dst, base);
+        encoded[length++] = inst.operands[1].disp;
+        break;
     }
     case OperandType::Imm: {
-        auto imm = static_cast<std::uint32_t>(inst.operands[1].imm & 0xffffffffu);
+        auto imm = inst.operands[1].imm;
         if (dst >= 8) {
             dst -= 8;
         }
@@ -172,8 +153,16 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
         encoded[length++] = 0xb8 + dst;
         encoded[length++] = (imm >> 0u) & 0xffu;
         encoded[length++] = (imm >> 8u) & 0xffu;
-        encoded[length++] = (imm >> 16u) & 0xffu;
-        encoded[length++] = (imm >> 24u) & 0xffu;
+        if (inst.operand_width >= 32) {
+            encoded[length++] = (imm >> 16u) & 0xffu;
+            encoded[length++] = (imm >> 24u) & 0xffu;
+        }
+        if (inst.operand_width >= 64) {
+            encoded[length++] = (imm >> 32u) & 0xffu;
+            encoded[length++] = (imm >> 40u) & 0xffu;
+            encoded[length++] = (imm >> 48u) & 0xffu;
+            encoded[length++] = (imm >> 56u) & 0xffu;
+        }
         break;
     }
     case OperandType::Reg: {
@@ -181,8 +170,9 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
         if (src >= 8) {
             rex |= (1u << 2u); // REX.R
         }
-        rex |= (1u << 3u); // REX.W
-        encoded[length++] = rex;
+        if (rex != 0x40) {
+            encoded[length++] = rex;
+        }
         encoded[length++] = 0x89; // mov r/m, reg
         encoded[length++] = emit_mod_rm(mod, src, dst);
         break;
@@ -198,6 +188,7 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 }
 
 std::uint8_t encode_pop(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operand_width == 64);
     COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
     std::uint8_t length = 0;
     auto reg = static_cast<std::uint8_t>(inst.operands[0].reg);
@@ -210,6 +201,7 @@ std::uint8_t encode_pop(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 }
 
 std::uint8_t encode_push(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operand_width == 64);
     COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
     std::uint8_t length = 0;
     auto reg = static_cast<std::uint8_t>(inst.operands[0].reg);
@@ -252,6 +244,7 @@ std::uint8_t encode_jmp(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 }
 
 std::uint8_t encode_setcc(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operand_width == 8);
     COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
     auto reg = static_cast<std::uint8_t>(inst.operands[0].reg);
     std::uint8_t length = 0;
@@ -290,7 +283,7 @@ std::uint8_t encode_setcc(const MachineInst &inst, std::span<std::uint8_t, 16> e
 
 const std::array s_functions{
     &encode_arith,
-    &encode_cmp,
+    &encode_arith,
     &encode_leave,
     &encode_mov,
     &encode_pop,

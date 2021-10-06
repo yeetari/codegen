@@ -6,7 +6,7 @@ namespace coel::ir {
 
 class Argument : public Value {
 public:
-    Argument() : Value(ValueKind::Argument) {}
+    explicit Argument(const Type *type) : Value(ValueKind::Argument, type) {}
 };
 
 } // namespace coel::ir
