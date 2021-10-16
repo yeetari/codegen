@@ -1,5 +1,6 @@
 #include <coel/ir/Types.hh>
 
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -20,6 +21,9 @@ const BoolType *BoolType::get() {
 }
 
 const IntegerType *IntegerType::get(unsigned int bit_width) {
+    // TODO: This is target-dependent.
+    bit_width = std::bit_ceil(bit_width);
+    bit_width = std::max(bit_width, 8u);
     switch (bit_width) {
     case 8:
         return &s_int8_type;
