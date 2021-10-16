@@ -68,6 +68,10 @@ std::uint8_t Compiler::type_width(const ir::Type *type) {
         return 16;
     }
     if (const auto *integer_type = type->as<ir::IntegerType>()) {
+        // TODO: Remove this once 8-bit is properly supported/most of it is legalised away anyway.
+        if (integer_type->bit_width() == 8) {
+            return 16;
+        }
         return integer_type->bit_width();
     }
     COEL_ENSURE_NOT_REACHED();
