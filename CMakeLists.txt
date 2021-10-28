@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.16)
 project(coel CXX)
 
 option(COEL_BUILD_EXAMPLE "Build example" OFF)
