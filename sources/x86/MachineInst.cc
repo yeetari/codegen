@@ -123,7 +123,7 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
     case OperandType::BaseDisp: {
         // TODO: Use 32-bit displacement if needed.
         COEL_ASSERT(inst.operands[1].disp > std::numeric_limits<std::int8_t>::min() &&
-               inst.operands[1].disp < std::numeric_limits<std::int8_t>::max());
+                    inst.operands[1].disp < std::numeric_limits<std::int8_t>::max());
         bool need_sib = inst.operands[1].base == Register::rsp || inst.operands[1].base == Register::r12;
         COEL_ASSERT(!need_sib); // TODO: Support rsp and r12.
         if ((rex & (1u << 0u)) != 0) {
@@ -281,6 +281,7 @@ std::uint8_t encode_setcc(const MachineInst &inst, std::span<std::uint8_t, 16> e
     return length;
 }
 
+// clang-format off
 const std::array s_functions{
     &encode_arith,
     &encode_arith,
@@ -300,6 +301,7 @@ const std::array s_functions{
     &encode_setcc,
     &encode_setcc,
 };
+// clang-format on
 
 } // namespace
 
