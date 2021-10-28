@@ -75,6 +75,7 @@ int main() {
     std::ofstream output_file("foo.bin", std::ios::binary | std::ios::trunc);
     output_file.write(reinterpret_cast<const char *>(encoded.data()), static_cast<std::streamsize>(encoded.size()));
     auto *code_region =
+        // NOLINTNEXTLINE
         mmap(nullptr, encoded.size(), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     memcpy(code_region, encoded.data(), encoded.size());
     return reinterpret_cast<int (*)()>(static_cast<std::uint8_t *>(code_region) + entry)();

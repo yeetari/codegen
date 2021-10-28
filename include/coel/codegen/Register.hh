@@ -15,7 +15,7 @@ public:
         : ir::Value(ir::ValueKind::Register, type), m_value(reg | (physical ? k_physical_bit : 0)) {}
 
     void set_reg(std::size_t reg) { m_value = reg | (physical() ? k_physical_bit : 0); }
-    void set_physical(bool physical) { m_value ^= (-physical ^ m_value) & k_physical_bit; }
+    void set_physical(bool physical) { m_value ^= (-static_cast<std::size_t>(physical) ^ m_value) & k_physical_bit; }
 
     std::size_t reg() const { return m_value & ~k_physical_bit; }
     bool physical() const { return (m_value & k_physical_bit) != 0; }

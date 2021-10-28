@@ -67,7 +67,7 @@ void BranchInst::accept(InstVisitor *visitor) {
 void BranchInst::replace_uses_of_with(Value *orig, Value *repl) {
     if (m_dst == orig) {
         m_dst->remove_user(this);
-        m_dst = static_cast<BasicBlock *>(repl);
+        m_dst = repl->as_non_null<BasicBlock>();
         if (m_dst != nullptr) {
             m_dst->add_user(this);
         }

@@ -221,17 +221,17 @@ std::pair<std::size_t, std::vector<std::uint8_t>> encode(const std::vector<Machi
         case Opcode::CallLbl:
             inst.opcode = Opcode::Call;
             inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = label_map.at(inst.operands[0].lbl) - ret.size();
+            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
             break;
         case Opcode::JeLbl:
             inst.opcode = Opcode::Je;
             inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = label_map.at(inst.operands[0].lbl) - ret.size();
+            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
             break;
         case Opcode::JmpLbl:
             inst.opcode = Opcode::Jmp;
             inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = label_map.at(inst.operands[0].lbl) - ret.size();
+            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
             break;
         default:
             break;

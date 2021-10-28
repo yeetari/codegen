@@ -54,6 +54,13 @@ public:
     }
 
     template <typename T>
+    T *as_non_null() {
+        COEL_ASSERT(is<T>());
+        COEL_ASSERT_PEDANTIC(dynamic_cast<T *>(this) != nullptr);
+        return static_cast<T *>(this);
+    }
+
+    template <typename T>
     const T *as_non_null() const {
         COEL_ASSERT(is<T>());
         COEL_ASSERT_PEDANTIC(dynamic_cast<const T *>(this) != nullptr);
