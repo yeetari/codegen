@@ -1,5 +1,4 @@
 #include <coel/codegen/Context.hh>
-#include <coel/codegen/CopyInserter.hh>
 #include <coel/codegen/RegisterAllocator.hh>
 #include <coel/graph/DepthFirstSearch.hh>
 #include <coel/graph/DotGraph.hh>
@@ -12,6 +11,7 @@
 #include <coel/ir/Unit.hh>
 #include <coel/support/Assert.hh>
 #include <coel/x86/Backend.hh>
+#include <coel/x86/Legaliser.hh>
 
 #include <fmt/core.h>
 
@@ -56,11 +56,11 @@ int main() {
     ir::dump(unit);
 
     codegen::Context context(unit);
-    codegen::insert_copies(context);
+    x86::legalise(context);
 
-    fmt::print("===============\n");
-    fmt::print("INSERTED COPIES\n");
-    fmt::print("===============\n");
+    fmt::print("=========\n");
+    fmt::print("LEGALISED\n");
+    fmt::print("=========\n");
     ir::dump(unit);
 
     codegen::register_allocate(context);
@@ -74,6 +74,7 @@ int main() {
     auto [entry, encoded] = x86::encode(compiled, main);
     std::ofstream output_file("foo.bin", std::ios::binary | std::ios::trunc);
     output_file.write(reinterpret_cast<const char *>(encoded.data()), static_cast<std::streamsize>(encoded.size()));
+    output_file.flush();
     auto *code_region =
         // NOLINTNEXTLINE
         mmap(nullptr, encoded.size(), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

@@ -45,22 +45,22 @@ public:
 };
 
 RegisterAllocator::RegisterAllocator(Context &context) : m_context(context) {
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rsi));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rdi));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rax));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rcx));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rdx));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r8));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r9));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r10));
-    m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r11));
+    m_phys_regs.push_back(x86::Register::rsi);
+    m_phys_regs.push_back(x86::Register::rdi);
+    m_phys_regs.push_back(x86::Register::rax);
+    m_phys_regs.push_back(x86::Register::rcx);
+    m_phys_regs.push_back(x86::Register::rdx);
+    m_phys_regs.push_back(x86::Register::r8);
+    m_phys_regs.push_back(x86::Register::r9);
+    m_phys_regs.push_back(x86::Register::r10);
+    m_phys_regs.push_back(x86::Register::r11);
 
     // TODO: Allow use of these and preserve them if used.
-    // m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::rbx));
-    // m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r12));
-    // m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r13));
-    // m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r14));
-    // m_phys_regs.push_back(static_cast<std::size_t>(x86::Register::r15));
+    // m_phys_regs.push_back(x86::Register::rbx);
+    // m_phys_regs.push_back(x86::Register::r12);
+    // m_phys_regs.push_back(x86::Register::r13);
+    // m_phys_regs.push_back(x86::Register::r14);
+    // m_phys_regs.push_back(x86::Register::r15);
 }
 
 void RegisterAllocator::allocate(Register *virt) {

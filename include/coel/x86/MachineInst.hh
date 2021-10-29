@@ -48,12 +48,12 @@ struct Operand {
     union {
         struct {
             std::int32_t disp;
-            Register base;
+            std::uint8_t base;
         };
         std::uint64_t imm;
         const void *lbl;
         std::int64_t off;
-        Register reg;
+        std::uint8_t reg;
     };
 };
 

@@ -1,5 +1,4 @@
 target_sources(coel PRIVATE
-    codegen/CopyInserter.cc
     codegen/Liveness.cc
     codegen/RegisterAllocator.cc
     ir/BasicBlock.cc
@@ -14,4 +13,5 @@ target_sources(coel PRIVATE
     support/Assert.cc
     x86/Backend.cc
     x86/Builder.cc
+    x86/Legaliser.cc
     x86/MachineInst.cc)
