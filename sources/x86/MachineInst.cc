@@ -143,25 +143,17 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
         break;
     }
     case OperandType::Imm: {
-        auto imm = inst.operands[1].imm;
         if (dst >= 8) {
             dst -= 8;
         }
         if (rex != 0x40) {
             encoded[length++] = rex;
         }
-        encoded[length++] = 0xb8 + dst;
-        encoded[length++] = (imm >> 0u) & 0xffu;
-        encoded[length++] = (imm >> 8u) & 0xffu;
-        if (inst.operand_width >= 32) {
-            encoded[length++] = (imm >> 16u) & 0xffu;
-            encoded[length++] = (imm >> 24u) & 0xffu;
-        }
-        if (inst.operand_width >= 64) {
-            encoded[length++] = (imm >> 32u) & 0xffu;
-            encoded[length++] = (imm >> 40u) & 0xffu;
-            encoded[length++] = (imm >> 48u) & 0xffu;
-            encoded[length++] = (imm >> 56u) & 0xffu;
+        if (inst.operands[0].type == OperandType::Reg) {
+            encoded[length++] = 0xb8 + dst; // mov reg, imm
+        } else {
+            encoded[length++] = 0xc7; // mov r/m, imm
+            encoded[length++] = emit_mod_rm(mod, 0, dst);
         }
         break;
     }
@@ -183,6 +175,21 @@ std::uint8_t encode_mov(const MachineInst &inst, std::span<std::uint8_t, 16> enc
 
     if (inst.operands[0].type == OperandType::BaseDisp) {
         encoded[length++] = inst.operands[0].disp;
+    }
+    if (inst.operands[1].type == OperandType::Imm) {
+        auto imm = inst.operands[1].imm;
+        encoded[length++] = (imm >> 0u) & 0xffu;
+        encoded[length++] = (imm >> 8u) & 0xffu;
+        if (inst.operand_width >= 32) {
+            encoded[length++] = (imm >> 16u) & 0xffu;
+            encoded[length++] = (imm >> 24u) & 0xffu;
+        }
+        if (inst.operand_width >= 64) {
+            encoded[length++] = (imm >> 32u) & 0xffu;
+            encoded[length++] = (imm >> 40u) & 0xffu;
+            encoded[length++] = (imm >> 48u) & 0xffu;
+            encoded[length++] = (imm >> 56u) & 0xffu;
+        }
     }
     return length;
 }
