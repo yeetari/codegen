@@ -20,6 +20,7 @@ namespace {
 
 class Compiler final : public ir::InstVisitor {
     const ir::Function *m_function{nullptr};
+    const ir::BasicBlock *m_block{nullptr};
     std::unordered_map<const ir::StackSlot *, std::int32_t> m_stack_offsets;
     std::vector<MachineInst> m_insts;
 
@@ -94,7 +95,7 @@ void Compiler::run(const ir::Function *function) {
         emit(Opcode::Sub).reg(Register::rsp).imm(frame_size).width(64);
     }
     for (auto *block : *function) {
-        emit(Opcode::Lbl).lbl(block);
+        emit(Opcode::Lbl).lbl(m_block = block);
         for (auto *inst : *block) {
             inst->accept(this);
         }
@@ -117,7 +118,9 @@ void Compiler::visit(ir::BinaryInst *binary) {
 }
 
 void Compiler::visit(ir::BranchInst *branch) {
-    emit(Opcode::JmpLbl).lbl(branch->dst());
+    if (branch->dst() != m_block->next()) {
+        emit(Opcode::JmpLbl).lbl(branch->dst());
+    }
 }
 
 void Compiler::visit(ir::CallInst *call) {
@@ -152,8 +155,14 @@ void Compiler::visit(ir::CondBranchInst *cond_branch) {
     const auto *cond = cond_branch->cond()->as_non_null<codegen::Register>();
     COEL_ASSERT(cond->physical());
     emit(Opcode::Cmp).reg(static_cast<Register>(cond->reg())).imm(1).width(type_width(cond->type()));
-    emit(Opcode::JeLbl).lbl(cond_branch->true_dst());
-    emit(Opcode::JmpLbl).lbl(cond_branch->false_dst());
+    if (cond_branch->true_dst() == m_block->next()) {
+        emit(Opcode::JneLbl).lbl(cond_branch->false_dst());
+    } else {
+        emit(Opcode::JeLbl).lbl(cond_branch->true_dst());
+        if (cond_branch->false_dst() != m_block->next()) {
+            emit(Opcode::JmpLbl).lbl(cond_branch->false_dst());
+        }
+    }
 }
 
 void Compiler::visit(ir::CopyInst *copy) {
@@ -202,6 +211,7 @@ std::pair<std::size_t, std::vector<std::uint8_t>> encode(const std::vector<Machi
             break;
         case Opcode::JeLbl:
         case Opcode::JmpLbl:
+        case Opcode::JneLbl:
             inst.opcode = Opcode::Jmp;
             inst.operands[0].type = OperandType::Off;
             inst.operands[0].off = 0;
@@ -215,26 +225,29 @@ std::pair<std::size_t, std::vector<std::uint8_t>> encode(const std::vector<Machi
 
     std::vector<std::uint8_t> ret;
     for (auto inst : insts) {
+        bool is_control_flow = true;
         switch (inst.opcode) {
         case Opcode::Lbl:
             continue;
         case Opcode::CallLbl:
             inst.opcode = Opcode::Call;
-            inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
             break;
         case Opcode::JeLbl:
             inst.opcode = Opcode::Je;
-            inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
             break;
         case Opcode::JmpLbl:
             inst.opcode = Opcode::Jmp;
-            inst.operands[0].type = OperandType::Off;
-            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
+            break;
+        case Opcode::JneLbl:
+            inst.opcode = Opcode::Jne;
             break;
         default:
+            is_control_flow = false;
             break;
+        }
+        if (is_control_flow) {
+            inst.operands[0].type = OperandType::Off;
+            inst.operands[0].off = static_cast<std::int64_t>(label_map.at(inst.operands[0].lbl) - ret.size());
         }
         std::array<std::uint8_t, 16> encoded{};
         const auto length = encode(inst, encoded);

@@ -21,6 +21,7 @@ enum class Opcode {
     Call,
     Je,
     Jmp,
+    Jne,
     Sete,
     Setne,
     Setl,
@@ -32,6 +33,7 @@ enum class Opcode {
     CallLbl,
     JeLbl,
     JmpLbl,
+    JneLbl,
 };
 
 enum class OperandType {

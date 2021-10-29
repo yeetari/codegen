@@ -250,6 +250,13 @@ std::uint8_t encode_jmp(const MachineInst &inst, std::span<std::uint8_t, 16> enc
     return 2;
 }
 
+std::uint8_t encode_jne(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
+    COEL_ASSERT(inst.operands[0].type == OperandType::Off);
+    encoded[0] = 0x75;
+    encoded[1] = inst.operands[0].off - 2;
+    return 2;
+}
+
 std::uint8_t encode_setcc(const MachineInst &inst, std::span<std::uint8_t, 16> encoded) {
     COEL_ASSERT(inst.operand_width == 8);
     COEL_ASSERT(inst.operands[0].type == OperandType::Reg);
@@ -301,6 +308,7 @@ const std::array s_functions{
     &encode_call,
     &encode_je,
     &encode_jmp,
+    &encode_jne,
     &encode_setcc,
     &encode_setcc,
     &encode_setcc,
