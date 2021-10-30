@@ -190,7 +190,7 @@ void dump(Unit &unit) {
             }
             fmt::print("%a{}: {}", i, type_string(function->argument(i)->type()));
         }
-        fmt::print(") {{\n");
+        fmt::print("): {} {{\n", type_string(function->type()));
         dumper.dump_stack_slots();
         for (auto *block : *function) {
             dumper.dump(*block);
